@@ -1,6 +1,5 @@
-# Bloque 1 fija las versiones exactas al preparar el entorno (pip freeze).
-numpy
-pycuda
-pillow
-matplotlib
-pytest
+numpy==2.5.4
+pycuda==2026.1
+pillow==13.0.0
+matplotlib==3.11.2
+pytest==9.2.0
