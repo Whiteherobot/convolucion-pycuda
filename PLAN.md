@@ -12,6 +12,14 @@ Mismo reparto que la práctica 01. Cada bloque tiene sus archivos y una interfaz
 | 2. Kernel PyCUDA, volcado C/CUDA C y validación | Jordi Romero | `bloque-2-pycuda` | sáb 14 | Pendiente |
 | 3. Medición, experimentos, CSV, gráficas, informe y presentación | Andrés Morocho | `bloque-3-experimentos` | dom 15 | Pendiente |
 
+> [!IMPORTANT]
+> **Comentario del Ing. León sobre la P01** (hay que cumplirlo en esta): *«Muy buen trabajo en la
+> validación y en la comparación de tiempos antes y después del calentamiento. Registrar el estado de la
+> GPU ayudó a explicar por qué cambiaban los tiempos entre corridas. Para próximas prácticas, medir
+> también cuántos datos lee la GPU por segundo les ayudará a comprobar si el acceso a la memoria limita
+> el rendimiento.»* → se mantiene el calentamiento y el registro del estado de la GPU, y se agrega el
+> **ancho de banda efectivo** del kernel (ver bloques 2 y 3).
+
 Contrato común: imágenes y máscaras como `np.float32`, 2D, C-contiguas; acumulación en float32;
 ceros fuera de la imagen; correlación (las máscaras son simétricas); recorte a 0–255 **solo al guardar**.
 
@@ -26,7 +34,7 @@ No se modifica: lo nuevo de C/CUDA C va en `herramientas/`.
 Archivos: `src/convpy/imagen.py`, `mascaras.py`, `secuencial.py`, `__main__.py`, `scripts/info_equipo.sh`, `scripts/viabilidad.py`, `requirements.txt`.
 
 - [x] Entorno: venv, `pip install -r requirements.txt` y fijar versiones exactas (`pip freeze`).
-- [x] `scripts/info_equipo.sh` (reusa el de la P01 y agrega SO, núcleos y versiones de Python) → `resultados/equipo.txt`: CPU, núcleos, RAM, GPU, memoria de GPU,
+- [x] `scripts/info_equipo.sh` (reusa el de la P01 y agrega SO, núcleos, versiones de Python y el ancho de banda pico de la memoria de la GPU) → `resultados/equipo.txt`: CPU, núcleos, RAM, GPU, memoria de GPU,
       SO, Python, NumPy, PyCUDA, controlador y CUDA Toolkit.
 - [x] `imagen.py`: cargar en grises a float32 contiguo, guardar visual (redondeo + recorte), guardar/leer crudo (`.npy` y `.f32`).
 - [x] `mascaras.py`: media k×k, nitidez y laplaciano con los coeficientes de la práctica 01.
@@ -59,6 +67,9 @@ Archivos: `src/convpy/kernels/convolucion.cu`, `src/convpy/pycuda_conv.py`, `src
 - [ ] `ejecutar`: `cuda.mem_alloc`, `memcpy_htod`, lanzamiento con `block=(hilos,1,1)`,
       `grid=(ceil(n/hilos),1)`, `np.int32` para ancho/alto/k, `memcpy_dtoh`. Eventos `cuda.Event()`
       para CPU→GPU, kernel, GPU→CPU y total; `synchronize()` antes de `time_till()`. Documentar si la reserva entra al total.
+- [ ] Ancho de banda efectivo (comentario del docente): agregar a `TiemposGPU` un método
+      `ancho_banda_gbs(bytes)` = bytes ÷ (kernel_ms / 1000) / 1e9, con bytes = lo que el kernel lee y escribe
+      de memoria global; dejar explicado en el informe qué bytes se cuentan.
 - [ ] Verificar `flags['C_CONTIGUOUS']` y `dtype == float32` antes de transferir.
 - [ ] `herramientas/`: programa que compile con los fuentes de `practica01/src/modelo` y vuelque la salida
       **float sin recortar** (`.f32`) de C/C++ y CUDA C, para comparar las cuatro versiones.
@@ -73,6 +84,12 @@ Archivos: `src/convpy/medicion.py`, `experimentos.py`, `scripts/graficas.py`, `r
 
 - [ ] `medicion.py`: calentamiento + ≥5 repeticiones; `perf_counter` para Python secuencial; tiempos GPU de `TiemposGPU`.
 - [ ] CSV con `COLUMNAS_CSV` (versión, filtro, resolución, máscara, hilos/bloques, repetición, tiempos, unidad, estado).
+- [ ] Registrar el estado de la GPU en cada ventana de medición, como en la P01 (`gpu_estado.csv`:
+      P-state, relojes de GPU y memoria, PCIe, temperatura, con `nvidia-smi --query-gpu=...`), y antes de
+      medir liberar la GPU (`systemctl --user stop ollama.service`).
+- [ ] Mantener la comparación de tiempos con y sin calentamiento (lo valoró el docente).
+- [ ] Columna `ancho_banda_gbs` en el CSV/resumen, y una gráfica que la compare con el pico de la GPU
+      (`resultados/equipo.txt`: 256 GB/s en la RTX 4060 Laptop) para responder si el kernel está limitado por memoria.
 - [ ] Los 4 experimentos (un factor a la vez, 256 hilos fijos fuera del de hilos).
 - [ ] Volver a correr `practica01` (C/C++ y CUDA C) **en el mismo equipo** que PyCUDA, o justificar la reutilización.
 - [ ] Configuraciones de Python secuencial no viables: registrar tiempo transcurrido y motivo, marcar «no completada»,

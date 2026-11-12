@@ -7,6 +7,6 @@ Calentamiento previo + al menos 5 repeticiones completas por configuración viab
 
 COLUMNAS_CSV = [
     "experimento", "version", "filtro", "resolucion", "k", "hilos", "bloques",
-    "repeticion", "cpu_ms", "h2d_ms", "kernel_ms", "d2h_ms", "total_ms",
+    "repeticion", "cpu_ms", "h2d_ms", "kernel_ms", "d2h_ms", "total_ms", "ancho_banda_gbs",
     "unidad", "estado",  # estado: ok | no_completada (con motivo en el registro)
 ]
