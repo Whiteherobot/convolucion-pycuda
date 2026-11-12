@@ -5,8 +5,8 @@ Thread(s) per core:                      2
 Core(s) per socket:                      14
 RAM
                total        used        free      shared  buff/cache   available
-Mem:            15Gi       8,3Gi       3,5Gi       990Mi       5,1Gi       6,9Gi
-Swap:           15Gi       1,7Gi        13Gi
+Mem:            15Gi       8,7Gi       619Mi       861Mi       7,5Gi       6,5Gi
+Swap:           15Gi       5,0Gi        10Gi
 GPU
 NVIDIA GeForce RTX 4060 Laptop GPU, 8188 MiB, 620.70.06
 Versiones
@@ -20,3 +20,5 @@ Núcleos físicos
 14
 Python
 3.14.9 | NumPy 2.5.4 | PyCUDA 2026.1
+Ancho de banda pico de la memoria (2 x reloj x bus / 8)
+8001 MHz, bus 128 bits -> 256.0 GB/s
