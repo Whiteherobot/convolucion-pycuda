@@ -26,7 +26,13 @@ pip install -r requirements.txt
 python3 practica01/scripts/preparar_imagenes.py practica01/datos/original.jpg
 
 # Aplicar un filtro
-PYTHONPATH=src python3 -m convpy filtrar datos/imagen_4000.pgm resultados/media.pgm media 9 pycuda 256
+export PYTHONPATH=src
+python3 -m convpy filtrar datos/imagen_4000.pgm resultados/media.pgm media 9 pycuda 256
+python3 -m convpy filtrar datos/imagen_2000.pgm resultados/media.pgm media 3 secuencial
+
+# Datos del equipo y prueba de viabilidad de Python secuencial
+sh scripts/info_equipo.sh
+python3 scripts/viabilidad.py
 
 # Pruebas
 pytest -v

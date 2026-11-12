@@ -8,7 +8,7 @@ Mismo reparto que la práctica 01. Cada bloque tiene sus archivos y una interfaz
 
 | Bloque | Responsable | Rama | Para cuándo | Estado |
 |---|---|---|---|---|
-| 1. Entorno, programa Python y convolución secuencial | Michael Lata | `bloque-1-python` | vie 13 | Pendiente |
+| 1. Entorno, programa Python y convolución secuencial | Michael Lata | `bloque-1-python` | vie 13 | Terminado |
 | 2. Kernel PyCUDA, volcado C/CUDA C y validación | Jordi Romero | `bloque-2-pycuda` | sáb 14 | Pendiente |
 | 3. Medición, experimentos, CSV, gráficas, informe y presentación | Andrés Morocho | `bloque-3-experimentos` | dom 15 | Pendiente |
 
@@ -23,18 +23,27 @@ No se modifica: lo nuevo de C/CUDA C va en `herramientas/`.
 
 ## Bloque 1 — Entorno y Python (Michael Lata)
 
-Archivos: `src/convpy/imagen.py`, `mascaras.py`, `secuencial.py`, `__main__.py`, `scripts/info_equipo.py`, `requirements.txt`.
+Archivos: `src/convpy/imagen.py`, `mascaras.py`, `secuencial.py`, `__main__.py`, `scripts/info_equipo.sh`, `scripts/viabilidad.py`, `requirements.txt`.
 
-- [ ] Entorno: venv, `pip install -r requirements.txt` y fijar versiones exactas (`pip freeze`).
-- [ ] `scripts/info_equipo.py` → `resultados/equipo.txt`: CPU, núcleos, RAM, GPU, memoria de GPU,
+- [x] Entorno: venv, `pip install -r requirements.txt` y fijar versiones exactas (`pip freeze`).
+- [x] `scripts/info_equipo.sh` (reusa el de la P01 y agrega SO, núcleos y versiones de Python) → `resultados/equipo.txt`: CPU, núcleos, RAM, GPU, memoria de GPU,
       SO, Python, NumPy, PyCUDA, controlador y CUDA Toolkit.
-- [ ] `imagen.py`: cargar en grises a float32 contiguo, guardar visual (redondeo + recorte), guardar/leer crudo (`.npy` y `.f32`).
-- [ ] `mascaras.py`: media k×k, nitidez y laplaciano con los coeficientes de la práctica 01.
-- [ ] `secuencial.py`: convolución con bucles explícitos (sin filtros de librería, JIT, multiproceso ni C).
-- [ ] `python -m convpy filtrar ...` para secuencial y pycuda.
-- [ ] Prueba de viabilidad: medir Python secuencial en una imagen chica y estimar 2000/4000/6000 con 3, 9 y 21;
+- [x] `imagen.py`: cargar en grises a float32 contiguo, guardar visual (redondeo + recorte), guardar/leer crudo (`.npy` y `.f32`).
+- [x] `mascaras.py`: media k×k, nitidez y laplaciano con los coeficientes de la práctica 01.
+- [x] `secuencial.py`: convolución con bucles explícitos (sin filtros de librería, JIT, multiproceso ni C).
+- [x] `python -m convpy filtrar ...` para secuencial y pycuda.
+- [x] Prueba de viabilidad: medir Python secuencial en una imagen chica y estimar 2000/4000/6000 con 3, 9 y 21;
       pasarle a Andrés qué configuraciones son viables (las otras se marcan «no completada»).
-- [ ] Generar `datos/imagen_*.pgm` con el script de la práctica 01 (ver `datos/README.md`).
+- [x] Generar `datos/imagen_*.pgm` con el script de la práctica 01 (ver `datos/README.md`).
+
+**Resultados del bloque 1:**
+- Python secuencial da 78 y 87 en la figura 1, y en `imagen_2000` media 3×3 la imagen guardada es
+  idéntica píxel a píxel a la de C de la P01 (0 diferencias).
+- Viabilidad (`resultados/viabilidad_python.csv`, estimado con un recorte 500×500, **no son tiempos medidos**):
+  ~2,3 s/MP con 3×3, ~17 s/MP con 9×9 y ~83 s/MP con 21×21. Todas las configuraciones de la guía son
+  viables dejándolas correr: la más pesada es media 21×21 en 4000 (~22 min por ejecución, ~2,2 h con
+  calentamiento + 5). Todo el Python secuencial suma ~4 h → correrlo de noche en un solo bloque.
+- Python secuencial acumula en `np.float32` (como el `float` de C), no en el float64 de Python.
 
 **Entrega a los demás:** `imagen.py`, `mascaras.py` y `secuencial.py` funcionando (Jordi y Andrés los importan).
 
