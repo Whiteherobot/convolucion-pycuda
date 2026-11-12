@@ -20,7 +20,7 @@ Mismo reparto que la práctica 01. Cada bloque tiene sus archivos y una interfaz
 > el rendimiento.»* → se mantiene el calentamiento y el registro del estado de la GPU, y se agrega el
 > **ancho de banda efectivo** del kernel (ver bloques 2 y 3).
 
-Contrato común: imágenes y máscaras como `np.float32`, 2D, C-contiguas; acumulación en float32;
+Contrato común: imágenes y máscaras como `np.float32`, 2D, C-contiguas (Python secuencial las pasa a listas);
 ceros fuera de la imagen; correlación (las máscaras son simétricas); recorte a 0–255 **solo al guardar**.
 
 La práctica 01 está intacta en `practica01/` (commit `b2b8014` de
@@ -38,7 +38,7 @@ Archivos: `src/convpy/imagen.py`, `mascaras.py`, `secuencial.py`, `__main__.py`,
       SO, Python, NumPy, PyCUDA, controlador y CUDA Toolkit.
 - [x] `imagen.py`: cargar en grises a float32 contiguo, guardar visual (redondeo + recorte), guardar/leer crudo (`.npy` y `.f32`).
 - [x] `mascaras.py`: media k×k, nitidez y laplaciano con los coeficientes de la práctica 01.
-- [x] `secuencial.py`: convolución con bucles explícitos (sin filtros de librería, JIT, multiproceso ni C).
+- [x] `secuencial.py`: convolución **a mano** con listas de Python y bucles explícitos. Por indicación del docente en clase, el cálculo no usa NumPy (ni filtros de librería, JIT, multiproceso ni C); NumPy solo recibe y devuelve los datos.
 - [x] `python -m convpy filtrar ...` para secuencial y pycuda.
 - [x] Prueba de viabilidad: medir Python secuencial en una imagen chica y estimar 2000/4000/6000 con 3, 9 y 21;
       pasarle a Andrés qué configuraciones son viables (las otras se marcan «no completada»).
@@ -48,10 +48,14 @@ Archivos: `src/convpy/imagen.py`, `mascaras.py`, `secuencial.py`, `__main__.py`,
 - Python secuencial da 78 y 87 en la figura 1, y en `imagen_2000` media 3×3 la imagen guardada es
   idéntica píxel a píxel a la de C de la P01 (0 diferencias).
 - Viabilidad (`resultados/viabilidad_python.csv`, estimado con un recorte 500×500, **no son tiempos medidos**):
-  ~2,3 s/MP con 3×3, ~17 s/MP con 9×9 y ~83 s/MP con 21×21. Todas las configuraciones de la guía son
-  viables dejándolas correr: la más pesada es media 21×21 en 4000 (~22 min por ejecución, ~2,2 h con
-  calentamiento + 5). Todo el Python secuencial suma ~4 h → correrlo de noche en un solo bloque.
-- Python secuencial acumula en `np.float32` (como el `float` de C), no en el float64 de Python.
+  ~0,75 s/MP con 3×3, ~5,3 s/MP con 9×9 y ~26 s/MP con 21×21. Todas las configuraciones de la guía son
+  viables: la más pesada es media 21×21 en 4000 (~7 min por ejecución, ~42 min con calentamiento + 5).
+  Todo el Python secuencial suma ~1,3 h.
+- Para medir Python secuencial (bloque 3): pasar a listas con `.tolist()` **antes** de arrancar
+  `perf_counter()` y medir solo `secuencial.convolucion(lista_imagen, lista_mascara)`; esa conversión es preparación de datos.
+- Precisión: Python puro acumula en `float` de Python (64 bits) y el resultado se guarda en `float32`;
+  C, CUDA C y PyCUDA acumulan en `float` (32 bits). La diferencia es del orden de 1e-5, dentro de
+  la tolerancia; explicarlo en el informe (pregunta 2).
 
 **Entrega a los demás:** `imagen.py`, `mascaras.py` y `secuencial.py` funcionando (Jordi y Andrés los importan).
 
