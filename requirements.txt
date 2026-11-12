@@ -1,0 +1,6 @@
+# Bloque 1 fija las versiones exactas al preparar el entorno (pip freeze).
+numpy
+pycuda
+pillow
+matplotlib
+pytest
