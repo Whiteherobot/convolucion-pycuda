@@ -9,8 +9,10 @@
 import sys
 import time
 
+import numpy as np
+
 from . import imagen, mascaras
-from .secuencial import convolucion_secuencial
+from .secuencial import convolucion
 
 USO = __doc__
 
@@ -23,9 +25,12 @@ def filtrar(args: list[str]) -> None:
     print(f"{entrada}: {img.shape[1]}x{img.shape[0]}, {filtro} {k}x{k}, {version}")
 
     if version == "secuencial":
+        # Pasar a listas es preparación de datos: queda fuera del tiempo medido.
+        img_lista, mascara_lista = img.tolist(), mascara.tolist()
         inicio = time.perf_counter()
-        resultado = convolucion_secuencial(img, mascara)
+        resultado = convolucion(img_lista, mascara_lista)
         print(f"convolución: {(time.perf_counter() - inicio) * 1000:.2f} ms")
+        resultado = np.array(resultado, dtype=np.float32)
     elif version == "pycuda":
         from .pycuda_conv import ConvolucionPyCUDA
         resultado, t = ConvolucionPyCUDA().ejecutar(img, mascara, hilos)
