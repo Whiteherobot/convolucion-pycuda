@@ -1,0 +1,293 @@
+
+[14:11:01] ===== Práctica 02: corrida rapida, resultados en resultados/prueba_rapida/ =====
+Inicio: 2026-11-14 14:11:01
+
+[14:11:01] ===== Paso 1: Comprobaciones =====
+  encontrado: nvidia-smi
+  encontrado: nvcc
+  encontrado: cmake
+  encontrado: git
+  GPU: NVIDIA GeForce RTX 4060 Laptop GPU, 620.70.06, 8188 MiB
+  entorno virtual: .venv
+  Python 3.14.9 con todas las dependencias
+  commit a4061fb en la rama bloque-3-experimentos
+  ollama detenido
+  GPU libre: ningún otro proceso la usa
+
+[14:11:05] ===== Paso 2: Imágenes de entrada =====
+  ya existen datos/imagen_2000.pgm, imagen_4000.pgm e imagen_6000.pgm
+
+[14:11:05] ===== Paso 3: Datos del equipo =====
+  guardado en resultados/prueba_rapida/equipo.txt:
+    CPU
+    CPU(s):                                  20
+    Model name:                              13th Gen Intel(R) Core(TM) i7-13650HX
+    Thread(s) per core:                      2
+    Core(s) per socket:                      14
+    RAM
+                   total        used        free      shared  buff/cache   available
+    Mem:            15Gi       8,1Gi       3,1Gi       239Mi       5,2Gi       7,2Gi
+    Swap:           15Gi       7,5Gi       7,7Gi
+    GPU
+    NVIDIA GeForce RTX 4060 Laptop GPU, 8188 MiB, 620.70.06
+    Versiones
+    gcc (GCC) 16.2.1 20260810
+    Build cuda_13.4.r13.4/compiler.38855100_0
+    Python 3.14.9
+    Linux michi 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 13:54:44 +0000 x86_64 GNU/Linux
+    Sistema operativo
+    PRETTY_NAME="Omarchy"
+    Núcleos físicos
+    14
+    Python
+    3.14.9 | NumPy 2.5.4 | PyCUDA 2026.1
+    Ancho de banda pico de la memoria (2 x reloj x bus / 8)
+    8001 MHz, bus 128 bits -> 256.0 GB/s
+    Commit medido
+    a4061fb08282d544ab8f480db8e5b55b5bc6c416
+    Fecha de la corrida
+    2026-11-14 14:11:06 -05
+    Modo
+    rapida
+
+[14:11:06] ===== Paso 4: Pruebas (pytest) =====
+  pytest: figura 1, límites 1001x777, equivalencia de las 4 versiones y protocolo de medición
+  tests/test_equivalencia.py::test_cuatro_versiones_coinciden[media-3] PASSED [  5%]
+  tests/test_equivalencia.py::test_cuatro_versiones_coinciden[media-9] PASSED [ 10%]
+  tests/test_equivalencia.py::test_cuatro_versiones_coinciden[nitidez-3] PASSED [ 15%]
+  tests/test_equivalencia.py::test_cuatro_versiones_coinciden[laplaciano-3] PASSED [ 21%]
+  tests/test_limites.py::test_cobertura_total_con_cualquier_numero_de_hilos[128] PASSED [ 26%]
+  tests/test_limites.py::test_cobertura_total_con_cualquier_numero_de_hilos[256] PASSED [ 31%]
+  tests/test_limites.py::test_cobertura_total_con_cualquier_numero_de_hilos[512] PASSED [ 36%]
+  tests/test_limites.py::test_bordes_con_ceros_fuera_de_la_imagen PASSED   [ 42%]
+  tests/test_limites.py::test_hilos_fuera_de_rango[0] PASSED               [ 47%]
+  tests/test_limites.py::test_hilos_fuera_de_rango[1025] PASSED            [ 52%]
+  tests/test_limites.py::test_rechaza_entrada_que_no_es_float32 PASSED     [ 57%]
+  tests/test_manual.py::test_secuencial_figura1 PASSED                     [ 63%]
+  tests/test_manual.py::test_pycuda_figura1 PASSED                         [ 68%]
+  tests/test_medicion.py::test_csv_tiene_las_columnas_y_todas_las_filas PASSED [ 73%]
+  tests/test_medicion.py::test_python_repetido_se_reutiliza_con_nota PASSED [ 78%]
+  tests/test_medicion.py::test_pycuda_tiene_bloques_y_ancho_de_banda PASSED [ 84%]
+  tests/test_medicion.py::test_validacion_y_archivos_auxiliares PASSED     [ 89%]
+  tests/test_medicion.py::test_python_no_completada_si_no_cabe_en_el_presupuesto PASSED [ 94%]
+  tests/test_medicion.py::test_graficas_lee_lo_que_exporta_medir PASSED    [100%]
+  ============================== 19 passed in 6.34s ==============================
+
+[14:11:13] ===== Paso 5: Práctica 01: C/C++ y CUDA C =====
+  compilando practica01 en build/p01 (practica01/ no se modifica)
+  midiendo C/C++ y CUDA C: 4 experimentos, 5 repeticiones (unos 3 min)
+  === Experimentos: 5 repeticiones, calentamiento GPU de 2000 ms ===
+  CSV de salida: resultados/mediciones.csv
+  
+  [Exp 1] Tipo de filtro (imagen 4000, k=3, 256 hilos)
+    Imagen cargada: datos/imagen_4000.pgm  (4000x4000)
+        calentamiento GPU: 136 llamadas en 2007 ms, kernel 1.157 -> 0.633 ms
+        GPU medida de 14:11:20.341 a 14:11:20.407
+      media 3x3 4000x4000, 256 hilos x 62500 bloques: error max 4.58e-05, medio 3.04e-06 OK
+        calentamiento GPU: 150 llamadas en 2001 ms, kernel 0.642 -> 0.636 ms
+        GPU medida de 14:11:23.375 a 14:11:23.441
+      nitidez 3x3 4000x4000, 256 hilos x 62500 bloques: error max 0.00e+00, medio 0.00e+00 OK
+        calentamiento GPU: 150 llamadas en 2003 ms, kernel 0.641 -> 0.633 ms
+        GPU medida de 14:11:26.409 a 14:11:26.476
+      laplaciano 3x3 4000x4000, 256 hilos x 62500 bloques: error max 0.00e+00, medio 0.00e+00 OK
+  
+  [Exp 2] Resolución (media 9x9, 256 hilos)
+    Imagen cargada: datos/imagen_2000.pgm  (2000x2000)
+        calentamiento GPU: 490 llamadas en 2000 ms, kernel 0.706 -> 0.696 ms
+        GPU medida de 14:11:30.124 a 14:11:30.144
+      media 9x9 2000x2000, 256 hilos x 15625 bloques: error max 9.16e-05, medio 5.21e-06 OK
+    Imagen cargada: datos/imagen_4000.pgm  (4000x4000)
+        calentamiento GPU: 110 llamadas en 2007 ms, kernel 33.507 -> 2.768 ms
+        GPU medida de 14:11:38.586 a 14:11:38.663
+      media 9x9 4000x4000, 256 hilos x 62500 bloques: error max 1.07e-04, medio 5.21e-06 OK
+    Imagen cargada: datos/imagen_6000.pgm  (6000x6000)
+        calentamiento GPU: 50 llamadas en 2002 ms, kernel 65.264 -> 6.220 ms
+        GPU medida de 14:11:55.384 a 14:11:55.555
+      media 9x9 6000x6000, 256 hilos x 140625 bloques: error max 1.22e-04, medio 5.19e-06 OK
+  
+  [Exp 3] Tamaño de máscara (imagen 4000, media, 256 hilos)
+    Imagen cargada: datos/imagen_4000.pgm  (4000x4000)
+        calentamiento GPU: 150 llamadas en 2007 ms, kernel 0.643 -> 0.635 ms
+        GPU medida de 14:11:58.552 a 14:11:58.618
+      media 3x3 4000x4000, 256 hilos x 62500 bloques: error max 4.58e-05, medio 3.04e-06 OK
+        calentamiento GPU: 109 llamadas en 2008 ms, kernel 33.507 -> 2.781 ms
+        GPU medida de 14:12:07.155 a 14:12:07.232
+      media 9x9 4000x4000, 256 hilos x 62500 bloques: error max 1.07e-04, medio 5.21e-06 OK
+        calentamiento GPU: 62 llamadas en 2012 ms, kernel 178.864 -> 14.831 ms
+        GPU medida de 14:12:49.616 a 14:12:49.756
+      media 21x21 4000x4000, 256 hilos x 62500 bloques: error max 1.07e-04, medio 4.19e-06 OK
+  
+  [Exp 4] Hilos por bloque (imagen 4000, media 9x9)
+    Límite del dispositivo: 1024 hilos por bloque
+    Imagen cargada: datos/imagen_4000.pgm  (4000x4000)
+        calentamiento GPU: 117 llamadas en 2006 ms, kernel 33.513 -> 2.781 ms
+        GPU medida de 14:12:58.303 a 14:12:58.380
+      media 9x9 4000x4000, 128 hilos x 125000 bloques: error max 1.07e-04, medio 5.21e-06 OK
+        calentamiento GPU: 120 llamadas en 2005 ms, kernel 33.507 -> 2.782 ms
+        GPU medida de 14:13:06.930 a 14:13:07.009
+      media 9x9 4000x4000, 256 hilos x 62500 bloques: error max 1.07e-04, medio 5.21e-06 OK
+        calentamiento GPU: 110 llamadas en 2000 ms, kernel 33.657 -> 2.804 ms
+        GPU medida de 14:13:15.579 a 14:13:15.656
+      media 9x9 4000x4000, 512 hilos x 31250 bloques: error max 1.07e-04, medio 5.21e-06 OK
+  
+  === Experimentos completados: 0 configuraciones fuera de tolerancia. Resultados en resultados/mediciones.csv ===
+  guardado: resultados/prueba_rapida/p01_mediciones.csv, p01_medir_consola.txt y p01_gpu_estado.csv
+
+[14:13:15] ===== Paso 6: Práctica 02: Python y PyCUDA =====
+  prueba rápida: PyCUDA en los 4 experimentos; Python solo en el exp. 1, con 2 repeticiones
+Experimentos [1, 2, 3, 4]: 12 configuraciones, 2 repeticiones, 2 s de calentamiento GPU.
+Python secuencial en los experimentos: [1] (máximo 60 min por configuración).
+Resultados en: resultados/prueba_rapida/
+PyCUDA listo: contexto 108.7 ms, compilación del kernel 189.4 ms (costo único, fuera de las mediciones).
+Estado de la GPU: registrando cada 200 ms en resultados/prueba_rapida/gpu_estado.csv
+
+[Exp 1] Tipo de filtro
+  [1/12] media 3x3, 4000x4000, 256 hilos  (inicio 14:13:16.690, transcurrido 0.0 min)
+      python: calentamiento (14:13:16.996)
+      python: calentamiento 12.9 s; 2 repeticiones tomarán ~26 s
+      python: repetición 1/2: 12.90 s
+      python: repetición 2/2: 12.91 s
+      python: mediana 12.91 s (mín 12.90, máx 12.91)
+      pycuda: calentamiento 129 llamadas en 2002 ms, kernel 12.726 -> 0.651 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 0.653 ms, total 10.979 ms, 196.1 GB/s (medido de 14:13:58.719 a 14:13:58.748)
+      validación cuda_c contra c_cpu: error máx 4.58e-05, medio 3.04e-06, OK
+      validación python contra c_cpu: error máx 4.58e-05, medio 4.26e-06, OK
+      validación pycuda contra c_cpu: error máx 4.58e-05, medio 3.04e-06, OK
+  [2/12] nitidez 3x3, 4000x4000, 256 hilos  (inicio 14:13:59.269, transcurrido 0.7 min)
+      python: calentamiento (14:13:59.531)
+      python: calentamiento 12.9 s; 2 repeticiones tomarán ~26 s
+      python: repetición 1/2: 12.89 s
+      python: repetición 2/2: 12.82 s
+      python: mediana 12.85 s (mín 12.82, máx 12.89)
+      pycuda: calentamiento 123 llamadas en 2012 ms, kernel 12.633 -> 0.651 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 0.652 ms, total 12.537 ms, 196.4 GB/s (medido de 14:14:41.157 a 14:14:41.188)
+      validación cuda_c contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+      validación python contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+      validación pycuda contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+  [3/12] laplaciano 3x3, 4000x4000, 256 hilos  (inicio 14:14:41.768, transcurrido 1.4 min)
+      python: calentamiento (14:14:42.030)
+      python: calentamiento 12.9 s; 2 repeticiones tomarán ~26 s
+      python: repetición 1/2: 12.90 s
+      python: repetición 2/2: 12.85 s
+      python: mediana 12.87 s (mín 12.85, máx 12.90)
+      pycuda: calentamiento 120 llamadas en 2002 ms, kernel 12.688 -> 0.648 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 0.653 ms, total 12.649 ms, 196.1 GB/s (medido de 14:15:23.691 a 14:15:23.722)
+      validación cuda_c contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+      validación python contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+      validación pycuda contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+
+[Exp 2] Resolución
+  [4/12] media 9x9, 2000x2000, 256 hilos  (inicio 14:15:24.391, transcurrido 2.1 min)
+      pycuda: calentamiento 455 llamadas en 2003 ms, kernel 0.703 -> 0.711 ms
+      pycuda: 256 hilos x 15625 bloques, mediana kernel 0.715 ms, total 3.369 ms, 44.7 GB/s (medido de 14:15:26.401 a 14:15:26.410)
+      validación cuda_c contra c_cpu: error máx 9.16e-05, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 9.16e-05, medio 5.21e-06, OK
+  [5/12] media 9x9, 4000x4000, 256 hilos  (inicio 14:15:26.837, transcurrido 2.2 min)
+      pycuda: calentamiento 114 llamadas en 2008 ms, kernel 2.786 -> 2.794 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 2.803 ms, total 14.819 ms, 45.7 GB/s (medido de 14:15:28.871 a 14:15:28.907)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+  [6/12] media 9x9, 6000x6000, 256 hilos  (inicio 14:15:30.342, transcurrido 2.2 min)
+      pycuda: calentamiento 50 llamadas en 2020 ms, kernel 6.259 -> 6.275 ms
+      pycuda: 256 hilos x 140625 bloques, mediana kernel 6.277 ms, total 36.414 ms, 45.9 GB/s (medido de 14:15:32.427 a 14:15:32.510)
+      validación cuda_c contra c_cpu: error máx 1.22e-04, medio 5.19e-06, OK
+      validación pycuda contra c_cpu: error máx 1.22e-04, medio 5.19e-06, OK
+
+[Exp 3] Tamaño de máscara
+  [7/12] media 3x3, 4000x4000, 256 hilos  (inicio 14:15:36.268, transcurrido 2.3 min)
+      pycuda: calentamiento 123 llamadas en 2007 ms, kernel 5.486 -> 0.653 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 0.651 ms, total 12.603 ms, 196.5 GB/s (medido de 14:15:38.334 a 14:15:38.365)
+      validación cuda_c contra c_cpu: error máx 4.58e-05, medio 3.04e-06, OK
+      validación pycuda contra c_cpu: error máx 4.58e-05, medio 3.04e-06, OK
+  [8/12] media 9x9, 4000x4000, 256 hilos  (inicio 14:15:38.817, transcurrido 2.4 min)
+      pycuda: calentamiento 108 llamadas en 2009 ms, kernel 2.796 -> 2.809 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 2.800 ms, total 16.409 ms, 45.7 GB/s (medido de 14:15:40.844 a 14:15:40.882)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+  [9/12] media 21x21, 4000x4000, 256 hilos  (inicio 14:15:42.368, transcurrido 2.4 min)
+      pycuda: calentamiento 67 llamadas en 2011 ms, kernel 14.841 -> 14.853 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 14.851 ms, total 27.184 ms, 8.6 GB/s (medido de 14:15:44.410 a 14:15:44.470)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 4.19e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 4.19e-06, OK
+
+[Exp 4] Hilos por bloque
+  [10/12] media 9x9, 4000x4000, 128 hilos  (inicio 14:15:50.872, transcurrido 2.6 min)
+      pycuda: calentamiento 108 llamadas en 2012 ms, kernel 2.984 -> 2.822 ms
+      pycuda: 128 hilos x 125000 bloques, mediana kernel 2.810 ms, total 17.057 ms, 45.6 GB/s (medido de 14:15:52.903 a 14:15:52.943)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+  [11/12] media 9x9, 4000x4000, 256 hilos  (inicio 14:15:54.390, transcurrido 2.6 min)
+      pycuda: calentamiento 114 llamadas en 2013 ms, kernel 2.797 -> 2.803 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 2.813 ms, total 14.757 ms, 45.5 GB/s (medido de 14:15:56.420 a 14:15:56.456)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+  [12/12] media 9x9, 4000x4000, 512 hilos  (inicio 14:15:56.602, transcurrido 2.7 min)
+      pycuda: calentamiento 114 llamadas en 2018 ms, kernel 2.852 -> 2.822 ms
+      pycuda: 512 hilos x 31250 bloques, mediana kernel 2.826 ms, total 14.981 ms, 45.3 GB/s (medido de 14:15:58.637 a 14:15:58.673)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+
+Mediciones terminadas en 2.7 min.
+  Configuraciones medidas: 12 de 12
+  Comparaciones fuera de tolerancia: 0
+
+[14:15:59] ===== Paso 7: Tablas y gráficas =====
+Gráficas y tablas a partir de resultados/prueba_rapida/
+  leído  mediciones.csv
+  leído  p01_mediciones.csv
+  leído  p01_medir_consola.txt
+  leído  validacion.csv
+  leído  pycuda_inicio.csv
+  leído  ventanas_gpu.csv
+  leído  p01_gpu_estado.csv
+  leído  equipo.txt
+  repeticiones válidas: C/C++ 60, Python 6, CUDA C 60, PyCUDA 24
+  ancho de banda pico: 256.0 GB/s (calculado en equipo.txt)
+Salidas:
+  ok        resumen.csv
+  ok        aceleraciones.csv
+  ok        cudac_vs_pycuda.csv
+  ok        tablas/tabla_tiempos.tex
+  ok        tablas/tabla_variabilidad.tex
+  ok        tablas/tabla_aceleraciones.tex
+  ok        tablas/tabla_cudac_pycuda.tex
+  ok        tablas/tabla_ancho_banda.tex
+  ok        tablas/tabla_calentamiento.tex
+  ok        tablas/tabla_validacion.tex
+  ok        tablas/tabla_inicio_pycuda.tex
+  ok        graficas/exp1_filtros.png
+  ok        graficas/exp2_resolucion.png
+  ok        graficas/exp3_mascara.png
+  ok        graficas/exp4_hilos.png
+  ok        graficas/aceleraciones.png
+  ok        graficas/cudac_vs_pycuda_desglose.png
+  ok        graficas/ancho_banda.png
+  ok        graficas/calentamiento.png
+  ok        graficas/estado_gpu_p02.png
+  ok        graficas/estado_gpu_p01.png
+Generadas 21, omitidas 0 (faltan datos), con error 0.
+
+[14:16:01] ===== Paso 8: Evidencia visual =====
+Evidencia visual con imagen_4000.pgm (4000x4000)
+  ok        graficas/evidencia_filtros.png
+  ok        rangos_filtros.csv
+
+[14:16:04] ===== Resumen =====
+  ESTADO               DURACIÓN    PASO
+  OK                   -            Comprobaciones
+  OK                   -            Imágenes de entrada
+  OK                   0 min 01 s   Datos del equipo
+  OK                   0 min 07 s   Pruebas (pytest)
+  OK                   2 min 02 s   Práctica 01: C/C++ y CUDA C
+  OK                   2 min 44 s   Práctica 02: Python y PyCUDA
+  OK                   0 min 02 s   Tablas y gráficas
+  OK                   0 min 03 s   Evidencia visual
+  Tiempo total: 5 min 03 s
+  Resultados en resultados/prueba_rapida/ (registro completo en resultados/prueba_rapida/registro_corrida.txt)
+
+Todo terminó bien.
+
+Para que Andrés reciba los resultados:
+  git add resultados
+  git commit -m "Resultados: corrida rapida"
+  git push

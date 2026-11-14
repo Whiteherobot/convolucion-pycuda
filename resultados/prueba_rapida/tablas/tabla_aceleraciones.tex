@@ -1,0 +1,23 @@
+% Generado por scripts/graficas.py a partir de resultados/; no editar a mano.
+\begin{tabular}{llrrrrr}
+\toprule
+Exp. & Valor & \multicolumn{2}{c}{CUDA C vs C/C++} & \multicolumn{2}{c}{PyCUDA vs Python} & Python \\
+ & & cómputo & con transf. & cómputo & con transf. & vs C/C++ \\
+\midrule
+1 (Filtro) & media & 252 & 15 & 19771 & 1176 & 81 \\
+ & nitidez & 249 & 14 & 19721 & 1025 & 81 \\
+ & laplaciano & 248 & 14 & 19720 & 1018 & 82 \\
+\midrule
+2 (Resolución) & 2000$\times$2000 & 388 & 81 & -- & -- & -- \\
+ & 4000$\times$4000 & 390 & 82 & -- & -- & -- \\
+ & 6000$\times$6000 & 395 & 84 & -- & -- & -- \\
+\midrule
+3 (Máscara) & 3$\times$3 & 248 & 14 & -- & -- & -- \\
+ & 9$\times$9 & 394 & 84 & -- & -- & -- \\
+ & 21$\times$21 & 453 & 262 & -- & -- & -- \\
+\midrule
+4 (Hilos) & 128 hilos & 391 & 83 & -- & -- & -- \\
+ & 256 hilos & 391 & 83 & -- & -- & -- \\
+ & 512 hilos & 388 & 83 & -- & -- & -- \\
+\bottomrule
+\end{tabular}
