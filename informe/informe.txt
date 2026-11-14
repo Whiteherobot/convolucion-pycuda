@@ -88,6 +88,7 @@
 
   \begin{flushleft} \normalsize
     Repositorio: \repo\\
+    Commit medido: \texttt{a4061fb}\\
     Commit de entrega: \texttt{\pendiente{hash del commit etiquetado entrega}}\\
     Práctica 01: \repoAnterior, commit \texttt{b2b8014}
   \end{flushleft}
@@ -284,16 +285,17 @@ la práctica 01. Los datos salen de \texttt{resultados/equipo.txt}, que genera
 
 \begin{table}[H]
 \centering
-\caption{Equipo de medición \pendiente{confirmar con equipo.txt de la corrida final}.}
+\caption{Equipo de medición (corrida del 14 de noviembre de 2026).}
 \begin{tabular}{ll}
 \toprule
 CPU & Intel Core i7-13650HX, 14 núcleos, 20 hilos \\
 RAM & 15 GiB \\
 GPU & NVIDIA GeForce RTX 4060 Laptop GPU, 8188 MiB, capacidad 8.9 \\
-Ancho de banda pico de la memoria & 256 GB/s \\
-Controlador NVIDIA y CUDA Toolkit & 615.78.08 y 13.4 \\
-Sistema operativo & Linux 7.3.0 (CachyOS), x86\_64 \\
-Python y bibliotecas & Python 3.14.8, NumPy 2.5.4, PyCUDA 2026.1, Pillow 13.0.0, Matplotlib 3.11.2 \\
+Ancho de banda pico de la memoria & 256 GB/s (8001 MHz, bus de 128 bits) \\
+Controlador NVIDIA y CUDA Toolkit & 620.70.06 y 13.4 \\
+Compilador de C/C++ & GCC 16.2.1 \\
+Sistema operativo & Omarchy (Arch Linux), kernel Linux 7.3.3-cachyos, x86\_64 \\
+Python y bibliotecas & Python 3.14.9, NumPy 2.5.4, PyCUDA 2026.1, Pillow 13.0.0, Matplotlib 3.11.2 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -381,9 +383,11 @@ estimaciones para planificar, no resultados: unos 0.75\,s por megapíxel con $3\
 quedaba en unos 7 minutos por ejecución, así que todas las configuraciones eran viables. Aun así,
 el programa fija un límite de 60 minutos por configuración: si el calentamiento indica que las
 5 repeticiones no caben, se registra el tiempo transcurrido, la configuración y el motivo, y se
-marca como «no completada», sin presentar estimaciones como tiempos medidos.
-\pendiente{indicar si alguna configuración quedó no completada; si fue así, la comparación de las
-cuatro versiones se hace con media $9\times9$ en $2000\times2000$}.
+marca como «no completada», sin presentar estimaciones como tiempos medidos. En la corrida final
+ninguna configuración quedó no completada: las 12 tienen sus 5 repeticiones válidas en las cuatro
+versiones que les corresponden. El caso más lento, media $21\times21$ en 4000, tardó 475\,s por
+ejecución, cerca de lo estimado. La corrida completa duró 88 minutos, 86 de ellos en las
+mediciones de Python y PyCUDA.
 
 \subsection{Estadísticas, ancho de banda y registros}
 
@@ -448,8 +452,9 @@ significativos, así que con valores de hasta 255 el redondeo de una suma es del
 $10^{-5}$; según el orden de las operaciones las diferencias acumuladas quedan entre $10^{-5}$ y
 $10^{-4}$. La tolerancia deja un margen de 10 veces sobre eso y es 500 veces menor que 0.5, la
 diferencia mínima que podría cambiar un píxel al redondear para guardar. Un error de lógica, como
-un vecino mal indexado, daría diferencias de varias unidades. \pendiente{confirmar con la tabla
-que todas las configuraciones quedan dentro de la tolerancia}.
+un vecino mal indexado, daría diferencias de varias unidades. Las 33 comparaciones de la corrida
+final quedan dentro de la tolerancia; el error más grande es $3.97\times10^{-4}$, de Python
+secuencial con la media $21\times21$.
 
 Las diferencias tienen dos causas. Con nitidez y laplaciano los coeficientes y los píxeles son
 enteros, las sumas son exactas y el error debería ser 0. Con la media, $1/k^2$ no se representa
@@ -474,9 +479,10 @@ reducida el efecto de los filtros de $3\times3$ casi no se nota.}
 La media $9\times9$ suaviza la imagen y borra el grano fino. La nitidez marca más los bordes y
 también el ruido. El laplaciano se ve casi negro: antes del recorte cerca del 48\,\% de sus
 valores son negativos y al guardar pasan a 0, y los positivos son pequeños
-(\texttt{resultados/rangos\_filtros.csv}). \pendiente{confirmar los porcentajes con
-rangos\_filtros.csv de la corrida final}. Por eso la validación se hace con los valores sin
-recortar.
+(\texttt{resultados/rangos\_filtros.csv}): el 48.1\,\% de los píxeles queda bajo 0 y el valor
+mínimo es $-501$. En la nitidez solo el 1.15\,\% queda bajo 0 y el 0.67\,\% sobre 255, con
+valores entre $-60$ y 745; la media se mantiene entre 10.6 y 239. Por eso la validación se hace
+con los valores sin recortar.
 
 \section{Resultados}
 
@@ -506,7 +512,11 @@ el resto en milisegundos.
 \caption{Experimento 1: tiempo de cada versión por tipo de filtro (escala logarítmica).}
 \end{figure}
 
-\pendiente{describir la figura del experimento 1}
+Con máscaras de $3\times3$ el tipo de filtro casi no cambia el tiempo: las tres máscaras
+tienen el mismo tamaño y se recorren completas, aunque la nitidez y el laplaciano tengan ceros.
+Python secuencial tarda entre 13.1 y 13.7\,s, C/C++ entre 161 y 169\,ms, y las dos versiones GPU
+unos 11\,ms en total, de los que el kernel es solo 0.64--0.67\,ms. En la GPU casi todo el tiempo
+es copiar la imagen de ida y de vuelta.
 
 \begin{figure}[H]
 \centering
@@ -514,7 +524,10 @@ el resto en milisegundos.
 \caption{Experimento 2: tiempo de cada versión por resolución (escala logarítmica).}
 \end{figure}
 
-\pendiente{describir la figura del experimento 2}
+Al pasar de 2000 a 4000 y a 6000 los píxeles crecen 4 y 9 veces, y los tiempos crecen en la
+misma proporción en todas las versiones. Python secuencial pasa de 23.1 a 95.3 y a 213\,s
+(4.1 y 9.2 veces) y el kernel de PyCUDA de 0.71 a 2.81 y a 6.27\,ms (4.0 y 8.8 veces). Las
+barras de CUDA C y PyCUDA son casi iguales en las tres resoluciones.
 
 \begin{figure}[H]
 \centering
@@ -522,7 +535,10 @@ el resto en milisegundos.
 \caption{Experimento 3: tiempo de cada versión por tamaño de máscara (escala logarítmica).}
 \end{figure}
 
-\pendiente{describir la figura del experimento 3}
+La máscara es el factor que más pesa en las versiones secuenciales. De $3\times3$ a
+$21\times21$, Python secuencial pasa de 13.4 a 475\,s y C/C++ de 169\,ms a 6.8\,s. En la GPU el
+kernel crece de 0.65 a 14.8\,ms, pero el tiempo total solo de 11.0 a 25.9\,ms, porque las copias,
+que no dependen de la máscara, son las mismas.
 
 \begin{figure}[H]
 \centering
@@ -530,7 +546,9 @@ el resto en milisegundos.
 \caption{Experimento 4: kernel y tiempo total de CUDA C y PyCUDA por hilos por bloque.}
 \end{figure}
 
-\pendiente{describir la figura del experimento 4}
+Las tres configuraciones dan prácticamente el mismo tiempo. El kernel de CUDA C mide 2.782,
+2.781 y 2.804\,ms con 128, 256 y 512 hilos, y el de PyCUDA 2.799, 2.802 y 2.825\,ms. Con
+transferencias, todas quedan entre 13.10 y 13.19\,ms.
 
 \subsection{Aceleraciones}
 
@@ -548,7 +566,14 @@ es Python secuencial que C/C++.}
 \caption{Aceleración de CUDA C respecto de C/C++ y de PyCUDA respecto de Python secuencial.}
 \end{figure}
 
-\pendiente{describir la figura de aceleraciones}
+Solo en el kernel, CUDA C es entre 251 y 460 veces más rápido que C/C++, y PyCUDA entre 19\,600
+y 34\,100 veces más rápido que Python secuencial. Al incluir las copias las cifras bajan mucho
+con máscaras pequeñas: con $3\times3$ CUDA C queda en 15 veces y PyCUDA en unas 1200, porque el
+kernel es menos del 6\,\% del tiempo total. Con la media $21\times21$ el cálculo pesa más y la
+aceleración con transferencias sube a 264 veces en CUDA C y a 18\,372 en PyCUDA. La aceleración
+de PyCUDA es mucho mayor porque Python secuencial es entre 70 y 87 veces más lento que C/C++
+(tabla~\ref{tab:tiempos}), no porque su GPU trabaje mejor: los tiempos de GPU de las dos
+versiones son casi iguales.
 
 \subsection{CUDA C y PyCUDA}
 
@@ -567,7 +592,10 @@ se miden con eventos CUDA en los mismos puntos, así que se pueden comparar dire
 \caption{Desglose del tiempo GPU en copia CPU$\to$GPU, kernel y copia GPU$\to$CPU.}
 \end{figure}
 
-\pendiente{describir la figura del desglose}
+Las barras de CUDA C (lisas) y de PyCUDA (rayadas) tienen la misma forma en todas las
+configuraciones. La copia CPU$\to$GPU de una imagen de 4000 (64\,MB) tarda unos 5.3\,ms y la de
+vuelta unos 5.0\,ms, unos 12\,GB/s, en las dos versiones. El kernel solo domina con la media
+$21\times21$.
 
 \begin{table}[H]
 \centering
@@ -590,14 +618,19 @@ se miden con eventos CUDA en los mismos puntos, así que se pueden comparar dire
 \caption{Ancho de banda efectivo de CUDA C y PyCUDA frente al pico de la GPU.}
 \end{figure}
 
-\pendiente{describir la figura de ancho de banda}
+Con las máscaras de $3\times3$ el kernel llega a unos 200\,GB/s en CUDA C y a 192--198\,GB/s en
+PyCUDA, entre el 75 y el 79\,\% del pico de 256\,GB/s. A ese nivel el kernel está limitado por la
+memoria: hace pocas operaciones por píxel y casi todo el tiempo es leer y escribir. Con
+$9\times9$ baja a unos 46\,GB/s (18\,\%) y con $21\times21$ a 8.6\,GB/s (3\,\%). Ahí el tráfico
+mínimo con la memoria global es el mismo, pero cada hilo hace 81 o 441 lecturas y productos, así
+que lo limita el cálculo y el acceso a la caché.
 
 \subsection{Calentamiento y estado de la GPU}
 
 \begin{table}[H]
 \centering
 \caption{Kernel en la primera llamada de cada configuración (frío) y mediana tras el
-calentamiento.}
+calentamiento.}\label{tab:calentamiento}
 \small
 \tabla{tabla_calentamiento.tex}
 \end{table}
@@ -608,17 +641,39 @@ calentamiento.}
 \caption{Tiempo del kernel sin calentar y después de calentar.}
 \end{figure}
 
-\pendiente{describir la figura de calentamiento}
+La primera llamada sin calentar puede ser hasta 19 veces más lenta que las siguientes, pero no
+por algo propio de PyCUDA. El factor aparece cuando la GPU estuvo un rato sin trabajo antes de la
+llamada. En la P02, antes de cada configuración se miden varios minutos de Python secuencial en
+la CPU, y el kernel frío de PyCUDA pasa de 0.65 a 12.6\,ms con $3\times3$ y de 2.8 a 33.5\,ms con
+$9\times9$. En cambio, en el experimento 4 y en media $9\times9$ del experimento 3, Python no se
+midió de nuevo y PyCUDA se ejecutó justo después de otra medición GPU: ahí la llamada fría tarda
+lo mismo que la caliente (factor 1.0 a 1.1). CUDA C muestra lo mismo, porque en cada
+configuración se mide antes C/C++ secuencial. El factor es 1.0 cuando esa medición dura 1 o 2\,s
+($3\times3$, o $9\times9$ en 2000) y unas 12 veces cuando dura 6\,s o más ($9\times9$ en 4000 y
+6000, y $21\times21$).
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.75\linewidth]{estado_gpu_p02.png}
-\caption{Relojes, enlace PCIe y temperatura de la GPU durante la medición de PyCUDA; en naranja,
-los intervalos de las repeticiones medidas. El registro de C/C++ y CUDA C está en
-\texttt{resultados/graficas/estado\_gpu\_p01.png}.}
+\includegraphics[width=\linewidth]{estado_gpu_p02_ventanas.png}
+\caption{Relojes de la GPU desde 3\,s antes hasta 1\,s después de las repeticiones de PyCUDA de
+cada configuración; en gris, los 2\,s de calentamiento. La línea de tiempo completa de la P02 y
+la de la P01 están en \texttt{resultados/graficas/estado\_gpu\_p02.png} y
+\texttt{estado\_gpu\_p01.png}.}
 \end{figure}
 
-\pendiente{describir la figura del estado de la GPU}
+La figura explica el factor anterior. Cuando la GPU espera a la CPU, baja al estado P8, con el
+reloj de cálculo en 210\,MHz, el de memoria en 405\,MHz y el enlace PCIe en generación 1. Al
+empezar el calentamiento sube en unos 0.3\,s a P0, con 2535\,MHz, 8001\,MHz y PCIe generación 4,
+y se mantiene así hasta el final de las repeticiones. Los 2\,s de calentamiento alcanzan con
+margen. Los factores de la tabla~\ref{tab:calentamiento} coinciden con esos relojes. Con
+$3\times3$, donde el kernel está limitado por la memoria, el factor es 19.3, y
+$8001/405=19.8$. Con $9\times9$ y $21\times21$, donde lo limita el cálculo, es de 10 a 12, y
+$2535/210=12.1$. Esto sugiere que la llamada fría corre casi completa con los relojes de bajo
+consumo, más que pagar un costo de inicio de PyCUDA. En las 24 configuraciones medidas, 12 de la P01 y 12 de la P02, todas las muestras
+cercanas a las repeticiones están en P0, a reloj máximo, en PCIe generación 4 y por debajo de
+64\,$^\circ$C (\texttt{resultados/estado\_gpu\_ventanas.csv} y
+\texttt{tablas/tabla\_estado\_gpu.tex}). No hubo bajadas de frecuencia por temperatura durante
+las mediciones.
 
 \section{Análisis}
 
@@ -637,36 +692,65 @@ llamarlo: en vez de \texttt{nvcc} y la sintaxis \texttt{<<<bloques, hilos>>>}, s
 
 \subsection{¿Las cuatro versiones producen resultados equivalentes?}
 
-\pendiente{responder con la tabla de validación: error máximo de cada versión, si todas quedan
-dentro de la tolerancia y en qué configuraciones aparece el error más grande}. Las diferencias se
-explican en la sección de validación: son de redondeo y vienen de la media, cuyos coeficientes no
-son exactos; con nitidez y laplaciano no debería haber diferencias.
+Sí. Las 33 comparaciones contra C/C++ quedan dentro de la tolerancia de $10^{-3}$. Con nitidez y
+laplaciano las cuatro versiones dan exactamente lo mismo (error 0). Con la media, CUDA C y PyCUDA
+tienen el mismo error en todas las configuraciones, de $4.6\times10^{-5}$ a $1.2\times10^{-4}$
+como máximo, lo que es coherente con que ejecutan el mismo kernel en la misma GPU. Python
+secuencial tiene el error más grande, de $1.4$ a $1.7\times10^{-4}$ con $9\times9$ y $3.97\times10^{-4}$ con
+$21\times21$, porque acumula en 64 bits y C/C++ en 32. Por lo tanto, buena parte de esa
+diferencia es el redondeo de la referencia y no de Python. Las diferencias son de redondeo y
+aparecen solo con la media, cuyos coeficientes $1/k^2$ no son exactos; crecen con la máscara
+porque hay más sumas.
 
 \subsection{¿Cómo influyen la resolución y la máscara en los tiempos de Python secuencial y PyCUDA?}
 
 Las dos versiones hacen $n\cdot k^2$ multiplicaciones y sumas, así que se espera que el tiempo
 de cálculo crezca con el número de píxeles y con el cuadrado del lado de la máscara. En Python
 secuencial todo el tiempo es cálculo. En PyCUDA las transferencias dependen solo del número de
-píxeles y no de la máscara, así que pesan más con máscaras pequeñas. \pendiente{comprobar con las
-tablas: proporción del tiempo entre 2000, 4000 y 6000 (los píxeles crecen 4 y 9 veces) y entre
-$k=3, 9, 21$ (los productos crecen 9 y 49 veces); fracción del total de PyCUDA que son
-transferencias con $3\times3$ y con $21\times21$}.
+píxeles y no de la máscara, así que pesan más con máscaras pequeñas.
+
+Con la resolución, los dos crecen como se esperaba. Python secuencial tarda 4.1 y 9.2 veces más
+en 4000 y 6000 que en 2000, y el kernel de PyCUDA 4.0 y 8.8 veces; los píxeles crecen 4 y 9
+veces. El total de PyCUDA crece 4.0 y 8.8 veces, porque las copias también son proporcionales a
+los píxeles.
+
+Con la máscara el crecimiento es menor que el número de productos, que se multiplica por 9 y por
+49. Python secuencial tarda 7.1 y 35.6 veces más con $9\times9$ y $21\times21$ que con
+$3\times3$. Una explicación posible, que no se midió por separado, es que parte del costo por
+píxel no depende de la máscara: recorrer la imagen, calcular índices y guardar el resultado. En
+PyCUDA el kernel crece solo 4.3 y 22.9 veces, porque con $3\times3$ está limitado por la memoria
+y no por el cálculo (sección de ancho de banda). En el total de PyCUDA, las copias son el 94\,\%
+con $3\times3$, el 79\,\% con $9\times9$ y el 43\,\% con $21\times21$.
 
 \subsection{¿Qué diferencias hay entre CUDA C y PyCUDA al medir solo el kernel y al incluir transferencias y gestión desde el host?}
 
 Como el kernel y la GPU son los mismos, se espera que el tiempo del kernel sea prácticamente
 igual en las dos versiones; PyCUDA no tiene por qué ser más rápido. Las diferencias deberían
 aparecer en lo que hace el host: en PyCUDA cada copia y cada lanzamiento pasa por Python y por
-la conversión de sus argumentos. \pendiente{comparar con la tabla de CUDA C y PyCUDA la
-diferencia en el kernel y en el total, y si aparece sobre todo en las copias}. Además, PyCUDA
-tiene un costo único de crear el contexto y compilar el kernel \pendiente{valores de la tabla},
-que no entra en las mediciones porque se paga una vez por ejecución del programa.
+la conversión de sus argumentos.
+
+Los datos lo confirman. En el kernel, PyCUDA es más lento que CUDA C en las 12 configuraciones,
+pero solo entre 12 y 31\,$\mu$s, del 0.1 al 4.8\,\%. La diferencia en microsegundos es casi la misma
+con kernels de 0.6 y de 15\,ms, así que en porcentaje pesa más con las máscaras pequeñas. Como
+los eventos encierran el lanzamiento, una hipótesis coherente con eso es que mide el tiempo que
+Python tarda en preparar y lanzar el kernel mientras la GPU espera. No se midió por separado. Con
+transferencias la diferencia queda entre 0 y 1.3\,\% (de 1 a 169\,$\mu$s) y no siempre favorece a la
+misma versión en las copias. Además, PyCUDA tiene un costo único de 110\,ms para crear el
+contexto y de 182\,ms para compilar el kernel. Eso no entra en las mediciones porque se paga una
+vez por ejecución del programa, pero equivale a unas 26 ejecuciones completas de la convolución
+$3\times3$ en 4000.
 
 \subsection{¿Qué configuración de hilos por bloque obtuvo mejores resultados y con qué variabilidad?}
 
-\pendiente{indicar la configuración con menor mediana de kernel en CUDA C y en PyCUDA, la
-diferencia entre 128, 256 y 512 y su coeficiente de variación}. En la práctica 01 la diferencia
-entre las tres configuraciones fue menor que la variación entre repeticiones.
+La de menor mediana de kernel fue 256 hilos en CUDA C (2.781\,ms) y 128 en PyCUDA (2.799\,ms).
+Entre 128 y 256 la diferencia es de 1 a 3\,$\mu$s, menor que la desviación entre repeticiones (de 1 a
+6\,$\mu$s), así que no se puede decir que una sea mejor. Con 512 hilos el kernel fue un 0.8\,\% más
+lento en las dos versiones (de 22 a 27\,$\mu$s), una diferencia pequeña pero mayor que la
+variabilidad.
+El coeficiente de variación del kernel quedó entre 0.0 y 0.2\,\% en las tres configuraciones y
+el del total entre 0.2 y 0.6\,\%. Como en la práctica 01, el número de hilos por bloque casi no
+importa para este kernel: cada hilo trabaja solo y la ocupación de la GPU es alta en los tres
+casos.
 
 \section{Limitaciones}
 
@@ -692,18 +776,47 @@ procedimiento afectan las conclusiones.
       más rápidas, pero no se probó para mantener las mismas condiciones que la práctica 01.
 \item Se tomaron 5 repeticiones por configuración, el mínimo de la guía. La variabilidad
       reportada es útil para comparar, pero con pocas muestras.
-\item \pendiente{agregar cualquier configuración no completada o anomalía que aparezca en la
-      corrida final}
+\item Las copias tuvieron dos valores atípicos: una copia GPU$\to$CPU de 8.3\,ms en PyCUDA con
+      nitidez y otra de 9.0\,ms con media $9\times9$ en 4000, frente a unos 5\,ms en las demás.
+      Por eso el coeficiente de variación del total sube a 16.6 y 14.9\,\% en esas dos
+      configuraciones. Se usan medianas para que un valor así no cambie los resultados. Python
+      secuencial tuvo algo parecido: una repetición lenta en 2000 y otra en 4000 con $9\times9$
+      (coeficiente de 4.3\,\%).
+\item La misma configuración medida en dos experimentos distintos puede variar más que dentro de
+      un experimento. C/C++ con media $3\times3$ en 4000 dio 161\,ms en el experimento 1 y
+      169\,ms en el 3. Las diferencias de menos del 5\,\% entre configuraciones no deben leerse
+      como resultados.
+\item El portátil tenía otros programas abiertos: al empezar la corrida usaba 8.2\,GiB de RAM y
+      7.4\,GiB de memoria de intercambio. No hubo otros procesos en la GPU, que se mantuvo en P0
+      durante las mediciones, pero la carga en la CPU puede haber afectado a las versiones
+      secuenciales.
+\item Ninguna configuración quedó no completada, así que todas las aceleraciones se calculan con
+      mediciones completas.
 \end{itemize}
 
 \section{Conclusiones}
 
-\pendiente{escribir con los resultados finales. Puntos a cubrir: (1) el programa se migró a
-Python y el kernel se reutilizó sin cambios de lógica; (2) las cuatro versiones son equivalentes
-dentro de la tolerancia, con el error máximo medido; (3) cuánto acelera la GPU frente a cada
-versión secuencial, solo kernel y con transferencias; (4) cuánto se parecen CUDA C y PyCUDA y
-dónde está la diferencia; (5) qué dice el ancho de banda sobre el límite del kernel; (6) efecto
-de los hilos por bloque y del calentamiento}.
+\begin{itemize}
+\item El programa anfitrión se migró completo a Python, y el kernel de la práctica 01 se
+      reutilizó sin cambios de lógica, compilado con \texttt{SourceModule}. Las cuatro versiones
+      se midieron en el mismo equipo, en una sola corrida y sin configuraciones incompletas.
+\item Las cuatro versiones son equivalentes. Con nitidez y laplaciano dan exactamente lo mismo, y
+      con la media el error máximo contra C/C++ es $3.97\times10^{-4}$, por debajo de la tolerancia
+      de $10^{-3}$. CUDA C y PyCUDA tienen el mismo error en todas las configuraciones.
+\item La GPU acelera mucho el cálculo: entre 251 y 460 veces frente a C/C++ y entre 19\,600 y
+      34\,100 veces frente a Python secuencial, si se cuenta solo el kernel. Las copias reducen
+      esas cifras, sobre todo con máscaras pequeñas, donde son el 94\,\% del tiempo: con
+      $3\times3$ la aceleración con transferencias es de 15 veces frente a C/C++.
+\item CUDA C y PyCUDA rinden casi igual. El kernel de PyCUDA tarda de 12 a 31\,$\mu$s más y el total
+      difiere como mucho un 1.3\,\%. El costo propio de PyCUDA está fuera del cálculo: 110\,ms para
+      crear el contexto y 182\,ms para compilar el kernel, una sola vez.
+\item Con máscaras de $3\times3$ el kernel aprovecha entre el 75 y el 79\,\% del ancho de banda
+      pico de la memoria. Con máscaras mayores pasa a estar limitado por el cálculo.
+\item El número de hilos por bloque (128, 256 o 512) casi no cambia el tiempo. Lo que sí importa
+      es calentar la GPU: tras una pausa, la primera llamada puede ser hasta 19 veces más lenta
+      porque la GPU está en su estado de bajo consumo. Los 2\,s de calentamiento bastaron para
+      medir siempre a frecuencia máxima.
+\end{itemize}
 
 \section{Contribuciones}
 
@@ -731,9 +844,11 @@ completa, gráficas y tablas, evidencia visual, informe y presentación. \\
 
 \section{Reproducibilidad}
 
-El código está en \repo. Las mediciones de este informe corresponden al commit
-\texttt{\pendiente{hash}}, etiquetado \texttt{entrega}; el mismo hash queda registrado en
-\texttt{resultados/equipo.txt} por la corrida. La práctica 01 está en \texttt{practica01/} y
+El código está en \repo. Las mediciones de este informe se tomaron con el commit
+\texttt{a4061fb}, que la corrida registra en \texttt{resultados/equipo.txt}. Los commits
+siguientes solo agregan los resultados, el informe y la tabla y la figura del estado de la GPU
+por configuración (\texttt{scripts/graficas.py}). No cambian el código medido. La versión
+entregada es el commit \texttt{\pendiente{hash}}, etiquetado \texttt{entrega}. La práctica 01 está en \texttt{practica01/} y
 proviene del commit \texttt{b2b8014} de \repoAnterior. Para repetir todo en un equipo con GPU
 NVIDIA:
 

@@ -16,6 +16,7 @@ Salidas:
                           mínimo y máximo de cada tiempo y del ancho de banda, y la llamada fría
   aceleraciones.csv       CUDA C vs C/C++, PyCUDA vs Python y Python vs C/C++, por configuración
   cudac_vs_pycuda.csv     las dos versiones GPU lado a lado (mismo kernel, mismo equipo)
+  estado_gpu_ventanas.csv estado de la GPU (nvidia-smi) en cada configuración medida, P01 y P02
   tablas/*.tex            tablas para el informe (\\input{...})
   graficas/*.png          gráficas para el informe y las diapositivas
 
@@ -741,7 +742,7 @@ def grafica_estado_gpu(muestras, ventanas, titulo, ruta):
     ax2b.plot(minutos, [m["temp"] for m in muestras], lw=0.8, color="#8172B2",
               label="temperatura (°C)")
     ax2b.grid(False)
-    for i, (a, b) in enumerate(ventanas_a_fechas(ventanas, t0)):
+    for i, (a, b) in enumerate(ventanas_a_fechas([v[:2] for v in ventanas], t0)):
         for ax in (ax1, ax2):
             ax.axvspan((a - t0).total_seconds() / 60, (b - t0).total_seconds() / 60 + 0.02,
                        color="orange", alpha=0.35, lw=0,
@@ -758,9 +759,111 @@ def grafica_estado_gpu(muestras, ventanas, titulo, ruta):
     _guardar(fig, ruta)
 
 
-def ventanas_p01(ruta: Path) -> list[tuple[str, str]]:
-    patron = re.compile(r"GPU medida de (\d\d:\d\d:\d\d\.\d+) a (\d\d:\d\d:\d\d\.\d+)")
-    return patron.findall(ruta.read_text(encoding="utf-8", errors="replace"))
+def etiqueta_ventana(filtro, lado, k, hilos) -> str:
+    return f"{filtro} {k}×{k}, {lado}×{lado}, {hilos} hilos"
+
+
+def ventanas_p01(ruta: Path) -> list[tuple[str, str, str]]:
+    """(inicio, fin, configuración) de cada ventana medida en la consola de la P01; la
+    configuración sale de la línea siguiente («media 3x3 4000x4000, 256 hilos ...»)."""
+    patron = re.compile(r"GPU medida de (\d\d:\d\d:\d\d\.\d+) a (\d\d:\d\d:\d\d\.\d+)"
+                        r"(?:[ \t]*\n[ \t]*(\w+) (\d+)x\d+ (\d+)x\d+, (\d+) hilos)?")
+    salida = []
+    for a, b, filtro, k, lado, hilos in patron.findall(
+            ruta.read_text(encoding="utf-8", errors="replace")):
+        etq = etiqueta_ventana(filtro, lado, k, hilos) if filtro else ""
+        salida.append((a, b, etq))
+    return salida
+
+
+def ventanas_p02(ruta: Path) -> list[tuple[str, str, str]]:
+    return [(v["inicio"], v["fin"], etiqueta_ventana(v["filtro"], v["resolucion"].split("x")[0],
+                                                      v["k"], v["hilos"]))
+            for v in leer_csv(ruta)]
+
+
+MARGEN_ANTES_S = 0.5  # las repeticiones duran menos que el periodo de 200 ms de nvidia-smi:
+MARGEN_DESPUES_S = 0.3  # se toman las muestras del final del calentamiento y justo después
+
+
+def estado_en_ventanas(muestras, ventanas, practica) -> list[dict]:
+    """Estado de la GPU en cada configuración medida: muestras de nvidia-smi desde 0,5 s antes de
+    las repeticiones (final del calentamiento, GPU ya ocupada) hasta 0,3 s después."""
+    if not muestras:
+        raise FaltanDatos("sin muestras de nvidia-smi")
+    filas = []
+    for (a, b), (_, _, etq) in zip(ventanas_a_fechas([v[:2] for v in ventanas], muestras[0]["t"]),
+                                   ventanas):
+        dentro = [m for m in muestras
+                  if a - timedelta(seconds=MARGEN_ANTES_S) <= m["t"] <= b + timedelta(seconds=MARGEN_DESPUES_S)]
+        if not dentro:
+            filas.append({"practica": practica, "configuracion": etq, "muestras": 0})
+            continue
+        rango = lambda clave: (min(m[clave] for m in dentro), max(m[clave] for m in dentro))  # noqa: E731
+        filas.append({"practica": practica, "configuracion": etq, "muestras": len(dentro),
+                      "pstate": "/".join(sorted({m["pstate"] for m in dentro})),
+                      "sm_min": rango("sm")[0], "sm_max": rango("sm")[1],
+                      "mem_min": rango("mem")[0], "mem_max": rango("mem")[1],
+                      "pcie_min": rango("pcie")[0], "temp_max": rango("temp")[1],
+                      "potencia_max": rango("potencia")[1]})
+    return filas
+
+
+def tabla_estado_gpu(filas, ruta):
+    def rango(f, clave):
+        a, b = f[f"{clave}_min"], f[f"{clave}_max"]
+        return f"{a:.0f}" if a == b else f"{a:.0f}--{b:.0f}"
+    cuerpo, grupos = [], []
+    for f in filas:
+        if not f["muestras"]:
+            cuerpo.append([f["practica"], tex(f["configuracion"]), "0"] + ["--"] * 6)
+        else:
+            cuerpo.append([f["practica"], tex(f["configuracion"]), str(f["muestras"]), f["pstate"],
+                           rango(f, "sm"), rango(f, "mem"), f"{f['pcie_min']:.0f}",
+                           f"{f['temp_max']:.1f}", f"{f['potencia_max']:.1f}"])
+        grupos.append(f["practica"])
+    tabla(ruta, "llrlrrrrr",
+          [r"Práctica & Configuración & Muestras & Estado & SM (MHz) & Memoria (MHz) & "
+           r"PCIe gen & T máx. ($^\circ$C) & P máx. (W)"], cuerpo, grupos,
+          nota="muestras de nvidia-smi de 0,5 s antes a 0,3 s después de las repeticiones")
+
+
+def grafica_estado_ventanas(muestras, ventanas, titulo, ruta):
+    """Una vista por configuración: relojes desde 3 s antes de las repeticiones medidas hasta
+    1 s después. En la P02 el registro dura más de una hora (casi todo Python en la CPU) y las
+    repeticiones PyCUDA no se ven en la línea de tiempo completa."""
+    if len(muestras) < 2 or not ventanas:
+        raise FaltanDatos("sin muestras de nvidia-smi o sin ventanas")
+    fechas = ventanas_a_fechas([v[:2] for v in ventanas], muestras[0]["t"])
+    columnas = min(6, len(ventanas))
+    filas_fig = -(-len(ventanas) // columnas)
+    fig, axs = plt.subplots(filas_fig, columnas, figsize=(1.75 * columnas + 1, 2.1 * filas_fig + 0.6),
+                            sharey=True, squeeze=False)
+    for i, ((a, b), (_, _, etq)) in enumerate(zip(fechas, ventanas)):
+        ax = axs[i // columnas][i % columnas]
+        cerca = [m for m in muestras
+                 if a - timedelta(seconds=3) <= m["t"] <= b + timedelta(seconds=1)]
+        x = [(m["t"] - a).total_seconds() for m in cerca]
+        ax.step(x, [m["sm"] for m in cerca], where="post", lw=1, color="#C44E52",
+                label="reloj SM (MHz)")
+        ax.step(x, [m["mem"] for m in cerca], where="post", lw=1, color="#4C72B0",
+                label="reloj memoria (MHz)")
+        ax.axvspan(-2, 0, color="grey", alpha=0.15, lw=0, label="calentamiento (2 s)")
+        ax.axvspan(0, max((b - a).total_seconds(), 0.05), color="orange", alpha=0.6, lw=0,
+                   label="repeticiones medidas")
+        ax.set_xlim(-3, 1)
+        ax.set_ylim(0, 9000)
+        ax.set_title(etq.replace(", ", "\n", 1), fontsize=7)
+        ax.tick_params(labelsize=7)
+        if i % columnas == 0:
+            ax.set_ylabel("MHz", fontsize=8)
+        if i // columnas == filas_fig - 1:
+            ax.set_xlabel("s respecto a las repeticiones", fontsize=7)
+        _leyenda_unica(ax, ncol=4)
+    for j in range(len(ventanas), filas_fig * columnas):
+        axs[j // columnas][j % columnas].axis("off")
+    fig.suptitle(titulo + " (nvidia-smi cada 200 ms)")
+    _guardar(fig, ruta)
 
 
 # ── Principal ────────────────────────────────────────────────────────────────────────────────
@@ -807,6 +910,19 @@ def main() -> int:
         return funcion(entradas[nombre])
 
     estado_p02 = sorted(base.glob("gpu_estado*.csv"))
+
+    def estado_ventanas():
+        filas_estado = []
+        for practica, ruta_estado, ventanas in (
+                ("P01", [entradas["p01_gpu_estado.csv"]], ("p01_medir_consola.txt", ventanas_p01)),
+                ("P02", estado_p02, ("ventanas_gpu.csv", ventanas_p02))):
+            rutas = [p for p in ruta_estado if p.exists()]
+            if rutas and entradas[ventanas[0]].exists():
+                filas_estado += estado_en_ventanas(leer_estado_gpu(rutas), leer_si(*ventanas),
+                                                   practica)
+        if not filas_estado:
+            raise FaltanDatos("sin registros de nvidia-smi con ventanas")
+        return filas_estado
     tareas = [
         (base / "resumen.csv", lambda r: escribir_resumen(resumen, r)),
         (base / "aceleraciones.csv", lambda r: escribir_filas(acel, r)),
@@ -830,13 +946,17 @@ def main() -> int:
         (dir_graf / "ancho_banda.png", lambda r: grafica_banda(resumen, pico, origen_pico, r)),
         (dir_graf / "calentamiento.png", lambda r: grafica_calentamiento(resumen, r)),
         (dir_graf / "estado_gpu_p02.png", lambda r: grafica_estado_gpu(
-            leer_estado_gpu(estado_p02),
-            [(v["inicio"], v["fin"]) for v in leer_si("ventanas_gpu.csv", leer_csv)],
+            leer_estado_gpu(estado_p02), leer_si("ventanas_gpu.csv", ventanas_p02),
             "Estado de la GPU durante la P02 (PyCUDA)", r)),
+        (dir_graf / "estado_gpu_p02_ventanas.png", lambda r: grafica_estado_ventanas(
+            leer_estado_gpu(estado_p02), leer_si("ventanas_gpu.csv", ventanas_p02),
+            "PyCUDA: estado de la GPU alrededor de cada configuración medida", r)),
         (dir_graf / "estado_gpu_p01.png", lambda r: grafica_estado_gpu(
             leer_si("p01_gpu_estado.csv", lambda p: leer_estado_gpu([p])),
             leer_si("p01_medir_consola.txt", ventanas_p01),
             "Estado de la GPU durante la P01 (CUDA C)", r)),
+        (base / "estado_gpu_ventanas.csv", lambda r: escribir_filas(estado_ventanas(), r)),
+        (dir_tab / "tabla_estado_gpu.tex", lambda r: tabla_estado_gpu(estado_ventanas(), r)),
     ]
 
     generadas, omitidas, errores = 0, 0, 0

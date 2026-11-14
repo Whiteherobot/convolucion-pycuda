@@ -110,7 +110,11 @@ Archivos: `src/convpy/medicion.py`, `experimentos.py`, `scripts/graficas.py`, `r
 - [x] `graficas.py`: mediana y variabilidad; aceleración CUDA C vs C/C++ y PyCUDA vs Python (kernel y con transferencias);
       CUDA C vs PyCUDA en condiciones equivalentes. Sin aceleraciones con ejecuciones incompletas.
 - [x] Evidencia visual: original + 3 filtros, recorte de la misma región.
-- [ ] (texto en `informe/informe.txt` con `\pendiente{}` donde faltan datos reales; se arma en Overleaf) Informe PDF (contexto con la P01, migración, entorno, flujo, validación, tablas, gráficas, 6 preguntas
+- [x] Corrida completa en el equipo de Michael (14-nov, commit medido `a4061fb`, 88 min, todo OK,
+      12 configuraciones sin `no_completada`, 33 validaciones dentro de la tolerancia).
+- [x] Estado de la GPU por configuración (`estado_gpu_ventanas.csv`, `tabla_estado_gpu.tex`,
+      `estado_gpu_p02_ventanas.png`): las 24 mediciones en P0, reloj máximo y PCIe gen 4.
+- [ ] (texto completo en `informe/informe.txt` con los datos reales; solo falta el hash de `entrega`; se arma en Overleaf) Informe PDF (contexto con la P01, migración, entorno, flujo, validación, tablas, gráficas, 6 preguntas
       de análisis, conclusiones, contribuciones, firmas, enlace al repo y hash del commit de entrega).
 - [ ] Diapositivas (10 min, los tres exponen).
 
