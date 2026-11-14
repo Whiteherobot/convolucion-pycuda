@@ -41,13 +41,15 @@ pytest -v
 ### Mediciones (equipo con GPU NVIDIA)
 
 ```bash
-scripts/correr_todo.sh --sin-python   # prueba rápida, ~3 min
-scripts/correr_todo.sh                # corrida completa, ~1,5 h
+scripts/correr_todo.sh --rapida          # prueba de todo el flujo, ~10 min -> resultados/prueba_rapida/
+scripts/correr_todo.sh                   # corrida completa, ~1 h 30 min   -> resultados/
+scripts/correr_todo.sh --continuar       # retoma una corrida cortada sin repetir lo medido
+scripts/correr_todo.sh --solo-graficas   # rehace tablas y gráficas desde los CSV (no necesita GPU)
 ```
 
-Corre las pruebas, la práctica 01 (C/C++ y CUDA C) y la 02 (Python y PyCUDA) en el mismo equipo y
-deja en `resultados/` las mediciones, la validación, el estado de la GPU y los datos del equipo.
-También se puede medir solo una parte: `PYTHONPATH=src python3 -m convpy medir --experimentos 4`.
+En el mismo equipo corre las pruebas, la práctica 01 (C/C++ y CUDA C, sin tocar `practica01/`) y la 02
+(Python y PyCUDA), y genera las tablas LaTeX (`resultados/tablas/`) y las gráficas (`resultados/graficas/`).
+Si un paso falla, sigue con los demás y lo indica en el resumen final. Todo queda en `registro_corrida.txt`.
 
 ## Estructura
 

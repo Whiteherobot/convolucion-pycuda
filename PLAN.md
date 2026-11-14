@@ -92,23 +92,24 @@ Archivos: `src/convpy/medicion.py`, `experimentos.py`, `scripts/graficas.py`, `r
       P-state, relojes de GPU y memoria, PCIe, temperatura, con `nvidia-smi --query-gpu=...`), y antes de
       medir liberar la GPU (`systemctl --user stop ollama.service`).
 - [x] Mantener la comparación de tiempos con y sin calentamiento (lo valoró el docente).
-- [ ] (CSV listo, falta la gráfica) Columna `ancho_banda_gbs` en el CSV/resumen, y una gráfica que la compare con el pico de la GPU
+- [x] Columna `ancho_banda_gbs` en el CSV/resumen, y una gráfica que la compare con el pico de la GPU
       (`resultados/equipo.txt`: 256 GB/s en la RTX 4060 Laptop) para responder si el kernel está limitado por memoria.
 - [x] Los 4 experimentos (un factor a la vez, 256 hilos fijos fuera del de hilos).
 - [x] Volver a correr `practica01` (C/C++ y CUDA C) **en el mismo equipo** que PyCUDA, o justificar la reutilización.
 - [x] Configuraciones de Python secuencial no viables: registrar tiempo transcurrido y motivo, marcar «no completada»,
       y hacer la comparación de las cuatro en una resolución menor común.
-> **Corrida en el equipo con GPU (Michael):** `git pull` y luego `scripts/correr_todo.sh --sin-python`
-> (~3 min, prueba) y después `scripts/correr_todo.sh` (~1,5 h, con la laptop enchufada). Hace pytest,
-> la P01 (C/C++ y CUDA C, compilada en `build/p01` y corrida fuera de `practica01/`) y la P02, y deja todo en
-> `resultados/`. Al terminar: `git add resultados && git commit && git push`.
+> **Corrida en el equipo con GPU (Michael):** `git pull` en `bloque-3-experimentos`; luego
+> `scripts/correr_todo.sh --rapida` (~10 min, prueba; resultados en `resultados/prueba_rapida/`) y
+> `scripts/correr_todo.sh` (~1 h 30 min, laptop enchufada). Hace pytest, la P01 (compilada en `build/p01` y corrida
+> fuera de `practica01/`), la P02, las tablas, las gráficas y la evidencia visual. Si se corta:
+> `scripts/correr_todo.sh --continuar`. Al terminar: `git add resultados && git commit && git push`.
 > Notas del protocolo: la fila `repeticion = 0` es la llamada sin calentar (estado `calentamiento`);
 > Python secuencial se mide una vez por configuración distinta y se repite en los exp. que la comparten;
 > si una configuración de Python no cabe en `--presupuesto-min` (60 por defecto) queda `no_completada`.
 
-- [ ] `graficas.py`: mediana y variabilidad; aceleración CUDA C vs C/C++ y PyCUDA vs Python (kernel y con transferencias);
+- [x] `graficas.py`: mediana y variabilidad; aceleración CUDA C vs C/C++ y PyCUDA vs Python (kernel y con transferencias);
       CUDA C vs PyCUDA en condiciones equivalentes. Sin aceleraciones con ejecuciones incompletas.
-- [ ] Evidencia visual: original + 3 filtros, recorte de la misma región.
+- [x] Evidencia visual: original + 3 filtros, recorte de la misma región.
 - [ ] Informe PDF (contexto con la P01, migración, entorno, flujo, validación, tablas, gráficas, 6 preguntas
       de análisis, conclusiones, contribuciones, firmas, enlace al repo y hash del commit de entrega).
 - [ ] Diapositivas (10 min, los tres exponen).

@@ -105,3 +105,14 @@ def test_python_no_completada_si_no_cabe_en_el_presupuesto(tmp_path):
     assert [f["estado"] for f in r.filas] == ["calentamiento", "no_completada"]
     assert "presupuesto" in r.filas[1]["nota"]
     assert r.salida.shape == (8, 8)
+
+
+def test_graficas_lee_lo_que_exporta_medir(corrida):
+    """graficas.py corre sin errores sobre la salida de medir (sin la P01: se omiten esas partes)."""
+    import subprocess
+    from pathlib import Path
+    script = Path(__file__).resolve().parents[1] / "scripts" / "graficas.py"
+    r = subprocess.run([sys.executable, str(script), str(corrida)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "con error 0" in r.stdout
+    assert (corrida / "resumen.csv").exists() and (corrida / "tablas" / "tabla_tiempos.tex").exists()

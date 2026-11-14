@@ -19,12 +19,15 @@ Columna `repeticion`: 0 es la llamada sin calentar (estado «calentamiento»); 1
 medidas (estado «ok»). Las medianas y aceleraciones solo usan estado «ok». La fila 0 sirve
 para la comparación con y sin calentamiento que pidió mantener el docente.
 """
+import atexit
 import csv
+import gc
 import shutil
 import subprocess
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 
@@ -114,32 +117,53 @@ def medir_secuencial(c: Configuracion, presupuesto_s: float,
     «no_completada» (la guía pide no inventar tiempos de lo que no terminó)."""
     imagen, mascara = c.imagen.tolist(), c.mascara.tolist()
     r = Resultado(inicio=hora())
+    print(f"      python: calentamiento ({hora()})")
 
-    t0 = time.perf_counter()
-    salida = convolucion(imagen, mascara)
-    calentamiento_ms = (time.perf_counter() - t0) * 1000
+    salida, calentamiento_ms = _cronometrar(imagen, mascara)
+    # La salida es determinista: la del calentamiento sirve para validar. Se pasa a float32 ya
+    # para no tener dos listas enormes vivas (6000x6000 en listas de Python pasa de 1 GB).
+    r.salida = np.array(salida, dtype=np.float32)
+    del salida
     r.filas.append(_fila(c, "python", 0, "calentamiento", cpu_ms=calentamiento_ms))
-    print(f"      python calentamiento: {calentamiento_ms / 1000:.1f} s")
 
     estimado_s = calentamiento_ms / 1000 * repeticiones
+    print(f"      python: calentamiento {calentamiento_ms / 1000:.1f} s; "
+          f"{repeticiones} repeticiones tomarán ~{_duracion(estimado_s)}")
     if estimado_s > presupuesto_s:
-        nota = (f"{repeticiones} repeticiones tomarían ~{estimado_s / 60:.0f} min, más que el "
-                f"presupuesto de {presupuesto_s / 60:.0f} min")
+        nota = (f"{repeticiones} repeticiones tomarían ~{_duracion(estimado_s)}, más que el "
+                f"presupuesto de {_duracion(presupuesto_s)}")
         r.filas.append(_fila(c, "python", 1, "no_completada", cpu_ms=calentamiento_ms, nota=nota))
-        print(f"      [NO COMPLETADA] {nota}")
+        print(f"      python: NO COMPLETADA, {nota}")
     else:
         for rep in range(1, repeticiones + 1):
-            t0 = time.perf_counter()
-            salida = convolucion(imagen, mascara)
-            cpu_ms = (time.perf_counter() - t0) * 1000
+            salida, cpu_ms = _cronometrar(imagen, mascara)
+            del salida  # liberar fuera del cronómetro
             r.filas.append(_fila(c, "python", rep, "ok", cpu_ms=cpu_ms))
+            print(f"      python: repetición {rep}/{repeticiones}: {cpu_ms / 1000:.2f} s")
         medidos = [f["cpu_ms"] / 1000 for f in r.filas[1:]]
         print(f"      python: mediana {np.median(medidos):.2f} s "
-              f"(min {min(medidos):.2f}, max {max(medidos):.2f})")
+              f"(mín {min(medidos):.2f}, máx {max(medidos):.2f})")
 
     r.fin = hora()
-    r.salida = np.array(salida, dtype=np.float32)
     return r
+
+
+def _cronometrar(imagen: list, mascara: list) -> tuple[list, float]:
+    """Una convolución secuencial con el recolector de basura apagado, como hace timeit: así
+    una pasada del recolector no cae dentro de una repetición y no en otra."""
+    gc.collect()
+    gc.disable()
+    try:
+        t0 = time.perf_counter()
+        salida = convolucion(imagen, mascara)
+        ms = (time.perf_counter() - t0) * 1000
+    finally:
+        gc.enable()
+    return salida, ms
+
+
+def _duracion(segundos: float) -> str:
+    return f"{segundos:.0f} s" if segundos < 120 else f"{segundos / 60:.1f} min"
 
 
 def medir_pycuda(gpu, c: Configuracion, repeticiones: int = REPETICIONES,
@@ -155,7 +179,7 @@ def medir_pycuda(gpu, c: Configuracion, repeticiones: int = REPETICIONES,
     while time.perf_counter() - inicio < calentamiento_s:
         _, ultimo = gpu.ejecutar(c.imagen, c.mascara, c.hilos)
         llamadas += 1
-    print(f"      calentamiento GPU: {llamadas} llamadas en "
+    print(f"      pycuda: calentamiento {llamadas} llamadas en "
           f"{(time.perf_counter() - inicio) * 1000:.0f} ms, kernel "
           f"{frio.kernel_ms:.3f} -> {ultimo.kernel_ms:.3f} ms")
 
@@ -171,8 +195,8 @@ def medir_pycuda(gpu, c: Configuracion, repeticiones: int = REPETICIONES,
     kernel = np.median([t.kernel_ms for t in medidos])
     total = np.median([t.total_ms for t in medidos])
     banda = np.median([t.ancho_banda_gbs(c.bytes_kernel) for t in medidos])
-    print(f"      pycuda {c.hilos} hilos x {c.bloques} bloques: kernel {kernel:.3f} ms, "
-          f"total {total:.3f} ms, {banda:.1f} GB/s  (medida {r.inicio} a {r.fin})")
+    print(f"      pycuda: {c.hilos} hilos x {c.bloques} bloques, mediana kernel {kernel:.3f} ms, "
+          f"total {total:.3f} ms, {banda:.1f} GB/s (medido de {r.inicio} a {r.fin})")
     return r
 
 
@@ -180,10 +204,13 @@ class EscritorCSV:
     """CSV que se escribe y vacía al terminar cada configuración (nunca entre repeticiones):
     si la corrida larga de Python se corta, lo ya medido no se pierde."""
 
-    def __init__(self, ruta, columnas=COLUMNAS_CSV):
-        self.archivo = open(ruta, "w", newline="")
+    def __init__(self, ruta, columnas=COLUMNAS_CSV, continuar: bool = False):
+        """Con continuar=True y el archivo ya existente, agrega filas al final sin cabecera."""
+        anexar = continuar and Path(ruta).exists() and Path(ruta).stat().st_size > 0
+        self.archivo = open(ruta, "a" if anexar else "w", newline="")
         self.escritor = csv.DictWriter(self.archivo, fieldnames=columnas)
-        self.escritor.writeheader()
+        if not anexar:
+            self.escritor.writeheader()
 
     def escribir(self, filas: list[dict]) -> None:
         self.escritor.writerows(filas)
@@ -204,12 +231,40 @@ class MonitorGPU:
         if shutil.which("nvidia-smi") is None:
             print("[AVISO] nvidia-smi no está disponible: no se registra el estado de la GPU")
             return self
+        # Sin heredar la salida estándar (si no, un nvidia-smi huérfano mantendría abierta la
+        # tubería del registro) y, en Linux, muere solo si este proceso muere de golpe.
         self.proceso = subprocess.Popen(
             ["nvidia-smi", f"--query-gpu={CONSULTA_GPU}", "--format=csv",
-             f"--loop-ms={self.intervalo_ms}", "-f", str(self.ruta)])
+             f"--loop-ms={self.intervalo_ms}", "-f", str(self.ruta)],
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            preexec_fn=_morir_con_el_padre)
+        atexit.register(self._detener)
+        time.sleep(0.5)
+        if self.proceso.poll() is not None:  # un fallo aquí no debe detener las mediciones
+            print(f"[AVISO] nvidia-smi terminó con código {self.proceso.returncode}: "
+                  "no se registra el estado de la GPU")
+            self.proceso = None
+        else:
+            print(f"Estado de la GPU: registrando cada {self.intervalo_ms} ms en {self.ruta}")
         return self
 
     def __exit__(self, *_):
-        if self.proceso is not None:
+        self._detener()
+
+    def _detener(self):
+        if self.proceso is not None and self.proceso.poll() is None:
             self.proceso.terminate()
-            self.proceso.wait()
+            try:
+                self.proceso.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.proceso.kill()
+
+
+def _morir_con_el_padre():
+    """prctl(PR_SET_PDEATHSIG, SIGTERM) en Linux; en otros sistemas no hace nada."""
+    try:
+        import ctypes
+        import signal
+        ctypes.CDLL("libc.so.6", use_errno=True).prctl(1, signal.SIGTERM)
+    except (OSError, AttributeError):
+        pass
