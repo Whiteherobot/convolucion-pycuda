@@ -38,6 +38,17 @@ python3 scripts/viabilidad.py
 pytest -v
 ```
 
+### Mediciones (equipo con GPU NVIDIA)
+
+```bash
+scripts/correr_todo.sh --sin-python   # prueba rápida, ~3 min
+scripts/correr_todo.sh                # corrida completa, ~1,5 h
+```
+
+Corre las pruebas, la práctica 01 (C/C++ y CUDA C) y la 02 (Python y PyCUDA) en el mismo equipo y
+deja en `resultados/` las mediciones, la validación, el estado de la GPU y los datos del equipo.
+También se puede medir solo una parte: `PYTHONPATH=src python3 -m convpy medir --experimentos 4`.
+
 ## Estructura
 
 ```text

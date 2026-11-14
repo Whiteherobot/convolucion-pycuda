@@ -86,18 +86,26 @@ Archivos: `src/convpy/kernels/convolucion.cu`, `src/convpy/pycuda_conv.py`, `src
 
 Archivos: `src/convpy/medicion.py`, `experimentos.py`, `scripts/graficas.py`, `resultados/`, `informe/`, `presentacion/`.
 
-- [ ] `medicion.py`: calentamiento + ≥5 repeticiones; `perf_counter` para Python secuencial; tiempos GPU de `TiemposGPU`.
-- [ ] CSV con `COLUMNAS_CSV` (versión, filtro, resolución, máscara, hilos/bloques, repetición, tiempos, unidad, estado).
-- [ ] Registrar el estado de la GPU en cada ventana de medición, como en la P01 (`gpu_estado.csv`:
+- [x] `medicion.py`: calentamiento + ≥5 repeticiones; `perf_counter` para Python secuencial; tiempos GPU de `TiemposGPU`.
+- [x] CSV con `COLUMNAS_CSV` (versión, filtro, resolución, máscara, hilos/bloques, repetición, tiempos, unidad, estado).
+- [x] Registrar el estado de la GPU en cada ventana de medición, como en la P01 (`gpu_estado.csv`:
       P-state, relojes de GPU y memoria, PCIe, temperatura, con `nvidia-smi --query-gpu=...`), y antes de
       medir liberar la GPU (`systemctl --user stop ollama.service`).
-- [ ] Mantener la comparación de tiempos con y sin calentamiento (lo valoró el docente).
-- [ ] Columna `ancho_banda_gbs` en el CSV/resumen, y una gráfica que la compare con el pico de la GPU
+- [x] Mantener la comparación de tiempos con y sin calentamiento (lo valoró el docente).
+- [ ] (CSV listo, falta la gráfica) Columna `ancho_banda_gbs` en el CSV/resumen, y una gráfica que la compare con el pico de la GPU
       (`resultados/equipo.txt`: 256 GB/s en la RTX 4060 Laptop) para responder si el kernel está limitado por memoria.
-- [ ] Los 4 experimentos (un factor a la vez, 256 hilos fijos fuera del de hilos).
-- [ ] Volver a correr `practica01` (C/C++ y CUDA C) **en el mismo equipo** que PyCUDA, o justificar la reutilización.
-- [ ] Configuraciones de Python secuencial no viables: registrar tiempo transcurrido y motivo, marcar «no completada»,
+- [x] Los 4 experimentos (un factor a la vez, 256 hilos fijos fuera del de hilos).
+- [x] Volver a correr `practica01` (C/C++ y CUDA C) **en el mismo equipo** que PyCUDA, o justificar la reutilización.
+- [x] Configuraciones de Python secuencial no viables: registrar tiempo transcurrido y motivo, marcar «no completada»,
       y hacer la comparación de las cuatro en una resolución menor común.
+> **Corrida en el equipo con GPU (Michael):** `git pull` y luego `scripts/correr_todo.sh --sin-python`
+> (~3 min, prueba) y después `scripts/correr_todo.sh` (~1,5 h, con la laptop enchufada). Hace pytest,
+> la P01 (C/C++ y CUDA C, compilada en `build/p01` y corrida fuera de `practica01/`) y la P02, y deja todo en
+> `resultados/`. Al terminar: `git add resultados && git commit && git push`.
+> Notas del protocolo: la fila `repeticion = 0` es la llamada sin calentar (estado `calentamiento`);
+> Python secuencial se mide una vez por configuración distinta y se repite en los exp. que la comparten;
+> si una configuración de Python no cabe en `--presupuesto-min` (60 por defecto) queda `no_completada`.
+
 - [ ] `graficas.py`: mediana y variabilidad; aceleración CUDA C vs C/C++ y PyCUDA vs Python (kernel y con transferencias);
       CUDA C vs PyCUDA en condiciones equivalentes. Sin aceleraciones con ejecuciones incompletas.
 - [ ] Evidencia visual: original + 3 filtros, recorte de la misma región.
