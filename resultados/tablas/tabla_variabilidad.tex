@@ -1,0 +1,23 @@
+% Generado por scripts/graficas.py a partir de resultados/; no editar a mano.
+\begin{tabular}{llrrrrrr}
+\toprule
+Exp. & Valor & C/C++ & Python & \multicolumn{2}{c}{CUDA C} & \multicolumn{2}{c}{PyCUDA} \\
+ & & & & kernel & total & kernel & total \\
+\midrule
+1 (Filtro) & media & 1.5 & 1.0 & 0.3 & 1.8 & 1.0 & 1.0 \\
+ & nitidez & 1.1 & 0.3 & 0.2 & 0.9 & 0.7 & 16.6 \\
+ & laplaciano & 0.4 & 0.2 & 0.1 & 0.4 & 1.2 & 0.9 \\
+\midrule
+2 (Resolución) & 2000$\times$2000 & 1.3 & 4.3 & 0.2 & 0.3 & 0.8 & 0.8 \\
+ & 4000$\times$4000 & 1.8 & 4.3 & 0.1 & 0.4 & 0.2 & 14.9 \\
+ & 6000$\times$6000 & 0.8 & 0.7 & 0.0 & 0.1 & 0.2 & 0.3 \\
+\midrule
+3 (Máscara) & 3$\times$3 & 0.7 & 1.0 & 0.1 & 0.5 & 0.5 & 0.4 \\
+ & 9$\times$9 & 0.4 & 4.3 & 0.1 & 0.1 & 0.0 & 0.4 \\
+ & 21$\times$21 & 0.5 & 0.6 & 0.0 & 0.5 & 0.0 & 1.3 \\
+\midrule
+4 (Hilos) & 128 hilos & 1.9 & -- & 0.2 & 0.2 & 0.1 & 0.6 \\
+ & 256 hilos & 1.9 & -- & 0.0 & 0.2 & 0.2 & 0.4 \\
+ & 512 hilos & 1.9 & -- & 0.1 & 0.3 & 0.2 & 0.4 \\
+\bottomrule
+\end{tabular}

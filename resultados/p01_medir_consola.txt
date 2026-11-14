@@ -1,0 +1,55 @@
+=== Experimentos: 5 repeticiones, calentamiento GPU de 2000 ms ===
+CSV de salida: resultados/mediciones.csv
+
+[Exp 1] Tipo de filtro (imagen 4000, k=3, 256 hilos)
+  Imagen cargada: datos/imagen_4000.pgm  (4000x4000)
+      calentamiento GPU: 128 llamadas en 2009 ms, kernel 1.314 -> 0.640 ms
+      GPU medida de 14:16:21.772 a 14:16:21.839
+    media 3x3 4000x4000, 256 hilos x 62500 bloques: error max 4.58e-05, medio 3.04e-06 OK
+      calentamiento GPU: 150 llamadas en 2010 ms, kernel 0.644 -> 0.636 ms
+      GPU medida de 14:16:24.862 a 14:16:24.929
+    nitidez 3x3 4000x4000, 256 hilos x 62500 bloques: error max 0.00e+00, medio 0.00e+00 OK
+      calentamiento GPU: 150 llamadas en 2008 ms, kernel 0.646 -> 0.643 ms
+      GPU medida de 14:16:27.966 a 14:16:28.032
+    laplaciano 3x3 4000x4000, 256 hilos x 62500 bloques: error max 0.00e+00, medio 0.00e+00 OK
+
+[Exp 2] Resolución (media 9x9, 256 hilos)
+  Imagen cargada: datos/imagen_2000.pgm  (2000x2000)
+      calentamiento GPU: 461 llamadas en 2001 ms, kernel 0.709 -> 0.699 ms
+      GPU medida de 14:16:31.809 a 14:16:31.830
+    media 9x9 2000x2000, 256 hilos x 15625 bloques: error max 9.16e-05, medio 5.21e-06 OK
+  Imagen cargada: datos/imagen_4000.pgm  (4000x4000)
+      calentamiento GPU: 109 llamadas en 2003 ms, kernel 33.505 -> 2.784 ms
+      GPU medida de 14:16:40.477 a 14:16:40.554
+    media 9x9 4000x4000, 256 hilos x 62500 bloques: error max 1.07e-04, medio 5.21e-06 OK
+  Imagen cargada: datos/imagen_6000.pgm  (6000x6000)
+      calentamiento GPU: 50 llamadas en 2002 ms, kernel 64.804 -> 6.250 ms
+      GPU medida de 14:16:57.689 a 14:16:57.860
+    media 9x9 6000x6000, 256 hilos x 140625 bloques: error max 1.22e-04, medio 5.19e-06 OK
+
+[Exp 3] Tamaño de máscara (imagen 4000, media, 256 hilos)
+  Imagen cargada: datos/imagen_4000.pgm  (4000x4000)
+      calentamiento GPU: 150 llamadas en 2006 ms, kernel 0.645 -> 0.635 ms
+      GPU medida de 14:17:00.923 a 14:17:00.990
+    media 3x3 4000x4000, 256 hilos x 62500 bloques: error max 4.58e-05, medio 3.04e-06 OK
+      calentamiento GPU: 120 llamadas en 2004 ms, kernel 33.507 -> 2.780 ms
+      GPU medida de 14:17:09.652 a 14:17:09.729
+    media 9x9 4000x4000, 256 hilos x 62500 bloques: error max 1.07e-04, medio 5.21e-06 OK
+      calentamiento GPU: 64 llamadas en 2019 ms, kernel 178.867 -> 14.831 ms
+      GPU medida de 14:17:52.802 a 14:17:52.943
+    media 21x21 4000x4000, 256 hilos x 62500 bloques: error max 1.07e-04, medio 4.19e-06 OK
+
+[Exp 4] Hilos por bloque (imagen 4000, media 9x9)
+  Límite del dispositivo: 1024 hilos por bloque
+  Imagen cargada: datos/imagen_4000.pgm  (4000x4000)
+      calentamiento GPU: 111 llamadas en 2004 ms, kernel 33.512 -> 2.785 ms
+      GPU medida de 14:18:01.682 a 14:18:01.759
+    media 9x9 4000x4000, 128 hilos x 125000 bloques: error max 1.07e-04, medio 5.21e-06 OK
+      calentamiento GPU: 112 llamadas en 2009 ms, kernel 33.508 -> 2.782 ms
+      GPU medida de 14:18:10.305 a 14:18:10.382
+    media 9x9 4000x4000, 256 hilos x 62500 bloques: error max 1.07e-04, medio 5.21e-06 OK
+      calentamiento GPU: 109 llamadas en 2003 ms, kernel 33.656 -> 2.805 ms
+      GPU medida de 14:18:19.032 a 14:18:19.109
+    media 9x9 4000x4000, 512 hilos x 31250 bloques: error max 1.07e-04, medio 5.21e-06 OK
+
+=== Experimentos completados: 0 configuraciones fuera de tolerancia. Resultados en resultados/mediciones.csv ===

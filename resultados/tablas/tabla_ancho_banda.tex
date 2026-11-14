@@ -1,0 +1,24 @@
+% Generado por scripts/graficas.py a partir de resultados/; no editar a mano.
+% Pico de la memoria de la GPU usado para el %: 256.0 GB/s
+\begin{tabular}{llrrrr}
+\toprule
+Exp. & Valor & \multicolumn{2}{c}{CUDA C} & \multicolumn{2}{c}{PyCUDA} \\
+ & & GB/s & \% del pico & GB/s & \% del pico \\
+\midrule
+1 (Filtro) & media & 200.0 & 78 & 194.4 & 76 \\
+ & nitidez & 200.8 & 78 & 195.0 & 76 \\
+ & laplaciano & 201.3 & 79 & 192.0 & 75 \\
+\midrule
+2 (Resolución) & 2000$\times$2000 & 45.8 & 18 & 45.0 & 18 \\
+ & 4000$\times$4000 & 46.0 & 18 & 45.5 & 18 \\
+ & 6000$\times$6000 & 46.1 & 18 & 45.9 & 18 \\
+\midrule
+3 (Máscara) & 3$\times$3 & 201.3 & 79 & 197.7 & 77 \\
+ & 9$\times$9 & 46.0 & 18 & 45.8 & 18 \\
+ & 21$\times$21 & 8.6 & 3 & 8.6 & 3 \\
+\midrule
+4 (Hilos) & 128 hilos & 46.0 & 18 & 45.7 & 18 \\
+ & 256 hilos & 46.0 & 18 & 45.7 & 18 \\
+ & 512 hilos & 45.7 & 18 & 45.3 & 18 \\
+\bottomrule
+\end{tabular}
