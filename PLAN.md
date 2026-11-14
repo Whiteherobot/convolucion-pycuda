@@ -64,21 +64,21 @@ Archivos: `src/convpy/imagen.py`, `mascaras.py`, `secuencial.py`, `__main__.py`,
 Archivos: `src/convpy/kernels/convolucion.cu`, `src/convpy/pycuda_conv.py`, `src/convpy/validacion.py`,
 `herramientas/` y `tests/`.
 
-- [ ] `kernels/convolucion.cu`: el kernel de la práctica 01 sin cambios de lógica
+- [x] `kernels/convolucion.cu`: el kernel de la práctica 01 sin cambios de lógica
       (un hilo por píxel, solo X, memoria global, control `tid < ancho*alto`, ceros fuera).
-- [ ] `ConvolucionPyCUDA.__init__`: contexto (`pycuda.autoinit` o `cuda.Device(0).make_context()`) y
+- [x] `ConvolucionPyCUDA.__init__`: contexto (`pycuda.autoinit` o `cuda.Device(0).make_context()`) y
       `SourceModule` → `get_function`; guardar `contexto_ms` y `compilacion_ms` aparte.
-- [ ] `ejecutar`: `cuda.mem_alloc`, `memcpy_htod`, lanzamiento con `block=(hilos,1,1)`,
+- [x] `ejecutar`: `cuda.mem_alloc`, `memcpy_htod`, lanzamiento con `block=(hilos,1,1)`,
       `grid=(ceil(n/hilos),1)`, `np.int32` para ancho/alto/k, `memcpy_dtoh`. Eventos `cuda.Event()`
       para CPU→GPU, kernel, GPU→CPU y total; `synchronize()` antes de `time_till()`. Documentar si la reserva entra al total.
-- [ ] Ancho de banda efectivo (comentario del docente): agregar a `TiemposGPU` un método
+- [x] Ancho de banda efectivo (comentario del docente): agregar a `TiemposGPU` un método
       `ancho_banda_gbs(bytes)` = bytes ÷ (kernel_ms / 1000) / 1e9, con bytes = lo que el kernel lee y escribe
       de memoria global; dejar explicado en el informe qué bytes se cuentan.
-- [ ] Verificar `flags['C_CONTIGUOUS']` y `dtype == float32` antes de transferir.
-- [ ] `herramientas/`: programa que compile con los fuentes de `practica01/src/modelo` y vuelque la salida
+- [x] Verificar `flags['C_CONTIGUOUS']` y `dtype == float32` antes de transferir.
+- [x] `herramientas/`: programa que compile con los fuentes de `practica01/src/modelo` y vuelque la salida
       **float sin recortar** (`.f32`) de C/C++ y CUDA C, para comparar las cuatro versiones.
-- [ ] `validacion.errores` y la justificación de `TOLERANCIA`.
-- [ ] Tests (ver `tests/README.md`): figura 1 (78 y 87), límites 1001×777, equivalencia de las cuatro.
+- [x] `validacion.errores` y la justificación de `TOLERANCIA`.
+- [x] Tests (ver `tests/README.md`): figura 1 (78 y 87), límites 1001×777, equivalencia de las cuatro.
 
 **Entrega a los demás:** `ConvolucionPyCUDA` y `TiemposGPU` funcionando; tabla de errores para el informe.
 
