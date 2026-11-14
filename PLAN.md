@@ -110,7 +110,7 @@ Archivos: `src/convpy/medicion.py`, `experimentos.py`, `scripts/graficas.py`, `r
 - [x] `graficas.py`: mediana y variabilidad; aceleración CUDA C vs C/C++ y PyCUDA vs Python (kernel y con transferencias);
       CUDA C vs PyCUDA en condiciones equivalentes. Sin aceleraciones con ejecuciones incompletas.
 - [x] Evidencia visual: original + 3 filtros, recorte de la misma región.
-- [ ] Informe PDF (contexto con la P01, migración, entorno, flujo, validación, tablas, gráficas, 6 preguntas
+- [ ] (texto en `informe/informe.txt` con `\pendiente{}` donde faltan datos reales; se arma en Overleaf) Informe PDF (contexto con la P01, migración, entorno, flujo, validación, tablas, gráficas, 6 preguntas
       de análisis, conclusiones, contribuciones, firmas, enlace al repo y hash del commit de entrega).
 - [ ] Diapositivas (10 min, los tres exponen).
 
