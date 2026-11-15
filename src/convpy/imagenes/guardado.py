@@ -1,17 +1,10 @@
-"""Lectura, conversión y escritura de imágenes. Bloque 1 - Michael Lata.
+"""SECCIÓN 1 · GUARDADO DE IMÁGENES. Bloque 1 - Michael Lata.
 
-Contrato con los demás bloques: toda imagen viaja como ndarray float32, 2D (alto, ancho),
-C-contiguo. El recorte a 0-255 solo se hace al guardar para ver, igual que en la práctica 01.
+La convolución devuelve float32 SIN recortar (la nitidez puede pasar de 255 y el laplaciano da
+negativos). El recorte a 0-255 solo se hace al guardar para ver, igual que en la práctica 01.
 """
 import numpy as np
 from PIL import Image
-
-
-def cargar_gris(ruta: str) -> np.ndarray:
-    """Lee la imagen, la pasa a escala de grises ('L') y devuelve float32 (alto, ancho) contiguo."""
-    with Image.open(ruta) as img:
-        gris = img.convert("L")
-        return np.ascontiguousarray(np.asarray(gris, dtype=np.float32))
 
 
 def a_rango_visual(imagen: np.ndarray) -> np.ndarray:

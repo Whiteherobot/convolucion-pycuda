@@ -7,17 +7,17 @@ Uso: PYTHONPATH=src python scripts/viabilidad.py
 """
 import time
 
-from convpy import imagen, mascaras
-from convpy.secuencial import convolucion
+from convpy import filtros, imagenes
+from convpy.convolucion.secuencial import convolucion
 
 LADO = 500
 REPETICIONES = 6  # calentamiento + 5 medidas
 
-recorte = imagen.cargar_gris("datos/imagen_4000.pgm")[:LADO, :LADO].tolist()
+recorte = imagenes.cargar_gris("datos/imagen_4000.pgm")[:LADO, :LADO].tolist()
 lineas = ["k,s_por_megapixel,resolucion,estimado_una_s,estimado_6_ejecuciones_min"]
 for k in (3, 9, 21):
     inicio = time.perf_counter()
-    convolucion(recorte, mascaras.media(k).tolist())
+    convolucion(recorte, filtros.crear("media", k).tolist())
     s_mp = (time.perf_counter() - inicio) / (LADO * LADO / 1e6)
     for lado in (2000, 4000, 6000):
         una = s_mp * lado * lado / 1e6

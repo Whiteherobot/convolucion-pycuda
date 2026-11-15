@@ -31,7 +31,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .secuencial import convolucion
+from ..convolucion.secuencial import convolucion
 
 REPETICIONES = 5
 CALENTAMIENTO_GPU_S = 2.0

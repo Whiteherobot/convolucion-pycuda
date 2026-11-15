@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import numpy as np
 import pytest
 
-from convpy import imagen, mascaras
+from convpy import filtros, imagenes
 
 FIGURA1_VALORES = np.array([[35, 40, 41, 45, 50],
                             [40, 40, 42, 46, 52],
@@ -25,11 +25,11 @@ def imagen_aleatoria(ancho: int, alto: int) -> np.ndarray:
 
 @pytest.fixture(scope="session")
 def gpu():
-    from convpy.pycuda_conv import ConvolucionPyCUDA
+    from convpy.convolucion.pycuda_gpu import ConvolucionPyCUDA
     return ConvolucionPyCUDA()
 
 
 @pytest.fixture(scope="session")
 def mascaras_prueba():
-    return [mascaras.crear("media", 3), mascaras.crear("media", 9),
-            mascaras.crear("nitidez"), mascaras.crear("laplaciano")]
+    return [filtros.crear("media", 3), filtros.crear("media", 9),
+            filtros.crear("nitidez"), filtros.crear("laplaciano")]

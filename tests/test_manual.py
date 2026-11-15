@@ -1,9 +1,9 @@
 """Matriz 5x5 de la figura 1 con valores calculados a mano. Bloque 2 - Jordy Romero."""
 import pytest
 
-from convpy.secuencial import convolucion_secuencial
+from convpy.convolucion.secuencial import convolucion_secuencial
 from conftest import FIGURA1_MASCARA, FIGURA1_VALORES
-from convpy.validacion import TOLERANCIA
+from convpy.evaluacion.validacion import TOLERANCIA
 
 
 def comprobar(salida):
