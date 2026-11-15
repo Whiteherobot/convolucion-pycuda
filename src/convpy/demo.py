@@ -21,9 +21,11 @@ from .evaluacion.validacion import TOLERANCIA, errores
 
 SALIDA = imagenes.carga.RAIZ / "resultados" / "demo"
 # Python secuencial hace ~1e7 multiplicaciones por segundo (13,4 s para 4000x4000 con 3x3).
-# Si la comparación tardaría más que esto, se hace sobre un recorte central.
-LIMITE_SECUENCIAL_S = 20
-LADO_RECORTE = 512
+# Si la comparación tardaría más que esto, se hace sobre un recorte central que entre en ese tiempo.
+MULT_POR_SEGUNDO = 1e7
+LIMITE_SECUENCIAL_S = 3
+LADO_RECORTE_MAX = 512
+LADO_PANEL = 1200  # píxeles por lado como máximo al dibujar el panel
 
 
 def _corta(ruta: Path) -> str:
@@ -93,14 +95,16 @@ def _gpu(img: np.ndarray, masks: dict[str, np.ndarray], hilos: int):
 def _secuencial(img: np.ndarray, masks: dict[str, np.ndarray], gpu_salidas: dict | None,
                 gpu=None) -> dict[str, np.ndarray]:
     _titulo("[3b] CONVOLUCIÓN SECUENCIAL EN PYTHON  (convpy/convolucion/secuencial.py)")
-    trabajo = img.size * sum(m.size for m in masks.values())
+    por_pixel = sum(m.size for m in masks.values())  # multiplicaciones por píxel, 3 filtros
+    segundos = img.size * por_pixel / MULT_POR_SEGUNDO
     zona = (slice(None), slice(None))
-    if trabajo / 1e7 > LIMITE_SECUENCIAL_S:
+    if segundos > LIMITE_SECUENCIAL_S:
+        lado = min(LADO_RECORTE_MAX, int((LIMITE_SECUENCIAL_S * MULT_POR_SEGUNDO / por_pixel) ** 0.5))
         alto, ancho = img.shape
-        y0, x0 = max(0, (alto - LADO_RECORTE) // 2), max(0, (ancho - LADO_RECORTE) // 2)
-        zona = (slice(y0, y0 + LADO_RECORTE), slice(x0, x0 + LADO_RECORTE))
-        print(f"la imagen completa tardaría ~{trabajo / 1e7:.0f} s en Python: se usa un recorte "
-              f"central de {LADO_RECORTE}x{LADO_RECORTE}")
+        y0, x0 = max(0, (alto - lado) // 2), max(0, (ancho - lado) // 2)
+        zona = (slice(y0, y0 + lado), slice(x0, x0 + lado))
+        print(f"la imagen completa tardaría ~{segundos:.0f} s en Python: se usa un recorte "
+              f"central de {lado}x{lado} (la GPU repite el cálculo sobre el mismo recorte)")
     parte = np.ascontiguousarray(img[zona])
     salidas = {}
     for nombre, m in masks.items():
@@ -134,6 +138,15 @@ def _guardar(img: np.ndarray, salidas: dict[str, np.ndarray], base: str, k: int,
     return _panel(img, salidas, base, k, carpeta)
 
 
+def _reducir(datos: np.ndarray, paso: int) -> np.ndarray:
+    """Promedia bloques de paso x paso (solo para dibujar; conserva bordes mejor que saltar píxeles)."""
+    if paso == 1:
+        return datos
+    alto, ancho = (datos.shape[0] // paso) * paso, (datos.shape[1] // paso) * paso
+    bloques = datos[:alto, :ancho].reshape(alto // paso, paso, ancho // paso, paso)
+    return bloques.mean(axis=(1, 3), dtype=np.float32)
+
+
 def _panel(img: np.ndarray, salidas: dict[str, np.ndarray], base: str, k: int,
            carpeta: Path) -> Path:
     import matplotlib
@@ -149,6 +162,9 @@ def _panel(img: np.ndarray, salidas: dict[str, np.ndarray], base: str, k: int,
         tope = np.percentile(lap, 99) or 1.0
         paneles.append(("Laplaciano |valor| realzado\n(solo para verlo)",
                         (np.clip(lap / tope, 0, 1) * 255).astype(np.uint8)))
+    # El panel se ve a ~400 px por imagen: dibujar 6000x6000 completo tarda ~8 s sin ganar nada.
+    paso = max(1, -(-max(img.shape) // LADO_PANEL))
+    paneles = [(titulo, _reducir(datos, paso)) for titulo, datos in paneles]
     fig, axs = plt.subplots(1, len(paneles), figsize=(3.2 * len(paneles), 3.8),
                             constrained_layout=True)
     for ax, (titulo, datos) in zip(axs, paneles):

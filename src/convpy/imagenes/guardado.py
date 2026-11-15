@@ -13,8 +13,12 @@ def a_rango_visual(imagen: np.ndarray) -> np.ndarray:
 
 
 def guardar_visual(ruta: str, imagen: np.ndarray) -> None:
-    """Guarda como uint8 (PGM o PNG según la extensión)."""
-    Image.fromarray(a_rango_visual(imagen), mode="L").save(ruta)
+    """Guarda como uint8 (PGM o PNG según la extensión).
+
+    compress_level=1: PNG comprime menos pero guarda ~5 veces más rápido; los píxeles son los mismos.
+    """
+    opciones = {"compress_level": 1} if str(ruta).lower().endswith(".png") else {}
+    Image.fromarray(a_rango_visual(imagen), mode="L").save(ruta, **opciones)
 
 
 def guardar_crudo(ruta: str, imagen: np.ndarray) -> None:
