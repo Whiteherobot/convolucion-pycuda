@@ -9,3 +9,5 @@ practica01/datos/*.pgm
 resultados/*.pgm
 resultados/crudos/
 .DS_Store
+resultados/demo/
+datos/descargas/
