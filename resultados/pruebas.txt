@@ -1,0 +1,28 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.9, pytest-9.2.0, pluggy-1.7.0 -- /home/ing_michi/Documents/Universidad/Computacion Paralela/Practica02-Convolucion-PyCUDA/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/ing_michi/Documents/Universidad/Computacion Paralela/Practica02-Convolucion-PyCUDA
+plugins: platformdirs-4.14.5
+collecting ... collected 19 items
+
+tests/test_equivalencia.py::test_cuatro_versiones_coinciden[media-3] PASSED [  5%]
+tests/test_equivalencia.py::test_cuatro_versiones_coinciden[media-9] PASSED [ 10%]
+tests/test_equivalencia.py::test_cuatro_versiones_coinciden[nitidez-3] PASSED [ 15%]
+tests/test_equivalencia.py::test_cuatro_versiones_coinciden[laplaciano-3] PASSED [ 21%]
+tests/test_limites.py::test_cobertura_total_con_cualquier_numero_de_hilos[128] PASSED [ 26%]
+tests/test_limites.py::test_cobertura_total_con_cualquier_numero_de_hilos[256] PASSED [ 31%]
+tests/test_limites.py::test_cobertura_total_con_cualquier_numero_de_hilos[512] PASSED [ 36%]
+tests/test_limites.py::test_bordes_con_ceros_fuera_de_la_imagen PASSED   [ 42%]
+tests/test_limites.py::test_hilos_fuera_de_rango[0] PASSED               [ 47%]
+tests/test_limites.py::test_hilos_fuera_de_rango[1025] PASSED            [ 52%]
+tests/test_limites.py::test_rechaza_entrada_que_no_es_float32 PASSED     [ 57%]
+tests/test_manual.py::test_secuencial_figura1 PASSED                     [ 63%]
+tests/test_manual.py::test_pycuda_figura1 PASSED                         [ 68%]
+tests/test_medicion.py::test_csv_tiene_las_columnas_y_todas_las_filas PASSED [ 73%]
+tests/test_medicion.py::test_python_repetido_se_reutiliza_con_nota PASSED [ 78%]
+tests/test_medicion.py::test_pycuda_tiene_bloques_y_ancho_de_banda PASSED [ 84%]
+tests/test_medicion.py::test_validacion_y_archivos_auxiliares PASSED     [ 89%]
+tests/test_medicion.py::test_python_no_completada_si_no_cabe_en_el_presupuesto PASSED [ 94%]
+tests/test_medicion.py::test_graficas_lee_lo_que_exporta_medir PASSED    [100%]
+
+============================== 19 passed in 5.13s ==============================

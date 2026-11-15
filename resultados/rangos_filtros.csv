@@ -1,0 +1,4 @@
+imagen,filtro,k,calculado_con,minimo,maximo,pct_bajo_0,pct_sobre_255
+imagen_4000.pgm,media,9,PyCUDA,10.62,238.95,0.00,0.00
+imagen_4000.pgm,nitidez,3,PyCUDA,-60.00,745.00,1.15,0.67
+imagen_4000.pgm,laplaciano,3,PyCUDA,-501.00,65.00,48.10,0.00

@@ -1,0 +1,95 @@
+Experimentos [1, 2, 3, 4]: 12 configuraciones, 2 repeticiones, 2 s de calentamiento GPU.
+Python secuencial en los experimentos: [1] (máximo 60 min por configuración).
+Resultados en: resultados/prueba_rapida/
+PyCUDA listo: contexto 108.7 ms, compilación del kernel 189.4 ms (costo único, fuera de las mediciones).
+Estado de la GPU: registrando cada 200 ms en resultados/prueba_rapida/gpu_estado.csv
+
+[Exp 1] Tipo de filtro
+  [1/12] media 3x3, 4000x4000, 256 hilos  (inicio 14:13:16.690, transcurrido 0.0 min)
+      python: calentamiento (14:13:16.996)
+      python: calentamiento 12.9 s; 2 repeticiones tomarán ~26 s
+      python: repetición 1/2: 12.90 s
+      python: repetición 2/2: 12.91 s
+      python: mediana 12.91 s (mín 12.90, máx 12.91)
+      pycuda: calentamiento 129 llamadas en 2002 ms, kernel 12.726 -> 0.651 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 0.653 ms, total 10.979 ms, 196.1 GB/s (medido de 14:13:58.719 a 14:13:58.748)
+      validación cuda_c contra c_cpu: error máx 4.58e-05, medio 3.04e-06, OK
+      validación python contra c_cpu: error máx 4.58e-05, medio 4.26e-06, OK
+      validación pycuda contra c_cpu: error máx 4.58e-05, medio 3.04e-06, OK
+  [2/12] nitidez 3x3, 4000x4000, 256 hilos  (inicio 14:13:59.269, transcurrido 0.7 min)
+      python: calentamiento (14:13:59.531)
+      python: calentamiento 12.9 s; 2 repeticiones tomarán ~26 s
+      python: repetición 1/2: 12.89 s
+      python: repetición 2/2: 12.82 s
+      python: mediana 12.85 s (mín 12.82, máx 12.89)
+      pycuda: calentamiento 123 llamadas en 2012 ms, kernel 12.633 -> 0.651 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 0.652 ms, total 12.537 ms, 196.4 GB/s (medido de 14:14:41.157 a 14:14:41.188)
+      validación cuda_c contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+      validación python contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+      validación pycuda contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+  [3/12] laplaciano 3x3, 4000x4000, 256 hilos  (inicio 14:14:41.768, transcurrido 1.4 min)
+      python: calentamiento (14:14:42.030)
+      python: calentamiento 12.9 s; 2 repeticiones tomarán ~26 s
+      python: repetición 1/2: 12.90 s
+      python: repetición 2/2: 12.85 s
+      python: mediana 12.87 s (mín 12.85, máx 12.90)
+      pycuda: calentamiento 120 llamadas en 2002 ms, kernel 12.688 -> 0.648 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 0.653 ms, total 12.649 ms, 196.1 GB/s (medido de 14:15:23.691 a 14:15:23.722)
+      validación cuda_c contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+      validación python contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+      validación pycuda contra c_cpu: error máx 0.00e+00, medio 0.00e+00, OK
+
+[Exp 2] Resolución
+  [4/12] media 9x9, 2000x2000, 256 hilos  (inicio 14:15:24.391, transcurrido 2.1 min)
+      pycuda: calentamiento 455 llamadas en 2003 ms, kernel 0.703 -> 0.711 ms
+      pycuda: 256 hilos x 15625 bloques, mediana kernel 0.715 ms, total 3.369 ms, 44.7 GB/s (medido de 14:15:26.401 a 14:15:26.410)
+      validación cuda_c contra c_cpu: error máx 9.16e-05, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 9.16e-05, medio 5.21e-06, OK
+  [5/12] media 9x9, 4000x4000, 256 hilos  (inicio 14:15:26.837, transcurrido 2.2 min)
+      pycuda: calentamiento 114 llamadas en 2008 ms, kernel 2.786 -> 2.794 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 2.803 ms, total 14.819 ms, 45.7 GB/s (medido de 14:15:28.871 a 14:15:28.907)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+  [6/12] media 9x9, 6000x6000, 256 hilos  (inicio 14:15:30.342, transcurrido 2.2 min)
+      pycuda: calentamiento 50 llamadas en 2020 ms, kernel 6.259 -> 6.275 ms
+      pycuda: 256 hilos x 140625 bloques, mediana kernel 6.277 ms, total 36.414 ms, 45.9 GB/s (medido de 14:15:32.427 a 14:15:32.510)
+      validación cuda_c contra c_cpu: error máx 1.22e-04, medio 5.19e-06, OK
+      validación pycuda contra c_cpu: error máx 1.22e-04, medio 5.19e-06, OK
+
+[Exp 3] Tamaño de máscara
+  [7/12] media 3x3, 4000x4000, 256 hilos  (inicio 14:15:36.268, transcurrido 2.3 min)
+      pycuda: calentamiento 123 llamadas en 2007 ms, kernel 5.486 -> 0.653 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 0.651 ms, total 12.603 ms, 196.5 GB/s (medido de 14:15:38.334 a 14:15:38.365)
+      validación cuda_c contra c_cpu: error máx 4.58e-05, medio 3.04e-06, OK
+      validación pycuda contra c_cpu: error máx 4.58e-05, medio 3.04e-06, OK
+  [8/12] media 9x9, 4000x4000, 256 hilos  (inicio 14:15:38.817, transcurrido 2.4 min)
+      pycuda: calentamiento 108 llamadas en 2009 ms, kernel 2.796 -> 2.809 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 2.800 ms, total 16.409 ms, 45.7 GB/s (medido de 14:15:40.844 a 14:15:40.882)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+  [9/12] media 21x21, 4000x4000, 256 hilos  (inicio 14:15:42.368, transcurrido 2.4 min)
+      pycuda: calentamiento 67 llamadas en 2011 ms, kernel 14.841 -> 14.853 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 14.851 ms, total 27.184 ms, 8.6 GB/s (medido de 14:15:44.410 a 14:15:44.470)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 4.19e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 4.19e-06, OK
+
+[Exp 4] Hilos por bloque
+  [10/12] media 9x9, 4000x4000, 128 hilos  (inicio 14:15:50.872, transcurrido 2.6 min)
+      pycuda: calentamiento 108 llamadas en 2012 ms, kernel 2.984 -> 2.822 ms
+      pycuda: 128 hilos x 125000 bloques, mediana kernel 2.810 ms, total 17.057 ms, 45.6 GB/s (medido de 14:15:52.903 a 14:15:52.943)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+  [11/12] media 9x9, 4000x4000, 256 hilos  (inicio 14:15:54.390, transcurrido 2.6 min)
+      pycuda: calentamiento 114 llamadas en 2013 ms, kernel 2.797 -> 2.803 ms
+      pycuda: 256 hilos x 62500 bloques, mediana kernel 2.813 ms, total 14.757 ms, 45.5 GB/s (medido de 14:15:56.420 a 14:15:56.456)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+  [12/12] media 9x9, 4000x4000, 512 hilos  (inicio 14:15:56.602, transcurrido 2.7 min)
+      pycuda: calentamiento 114 llamadas en 2018 ms, kernel 2.852 -> 2.822 ms
+      pycuda: 512 hilos x 31250 bloques, mediana kernel 2.826 ms, total 14.981 ms, 45.3 GB/s (medido de 14:15:58.637 a 14:15:58.673)
+      validación cuda_c contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+      validación pycuda contra c_cpu: error máx 1.07e-04, medio 5.21e-06, OK
+
+Mediciones terminadas en 2.7 min.
+  Configuraciones medidas: 12 de 12
+  Comparaciones fuera de tolerancia: 0

@@ -1,0 +1,885 @@
+% Informe de la práctica 02. Copiar este archivo como main.tex en Overleaf.
+% Figuras (.png) y tablas (.tex) de resultados/graficas/ y resultados/tablas/: subirlas a la carpeta images/ de Overleaf.
+% La bibliografía está en biblist.txt: subirla como biblist.bib.
+% Lo marcado con \pendiente{} se completa cuando lleguen los datos de la corrida final.
+
+\documentclass[12pt]{article}
+\usepackage[spanish,es-noshorthands,es-nodecimaldot]{babel}
+\usepackage{natbib}
+\usepackage{url}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\graphicspath{{images/}{../resultados/graficas/}}   % Overleaf: images/; repo: ../resultados/graficas/
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+
+
+\usepackage{vmargin}
+\setmarginsrb{3 cm}{2.5 cm}{2.5 cm}{2.5 cm} {1 cm}{1.5 cm}{1 cm}{1.5 cm}
+%\setmarginsrb{leftmargin}{topmargin}{rightmargin}{bottommargin}{headheight}{headsep}{footheight}{footskip}
+
+
+\title{Convolución de imágenes de alta resolución mediante PyCUDA}
+\author{Michael Lata \\ Jordy Romero \\ Andres Morocho}
+\date{\today}
+
+\makeatletter
+\let\thetitle\@title
+\let\theauthor\@author
+\let\thedate\@date
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Convolución de imágenes con Python y PyCUDA}
+\cfoot{\thepage}
+
+% Lo marcado con \pendiente{} se completa antes de la entrega.
+\newcommand{\pendiente}[1]{\textcolor{red}{\textbf{[PENDIENTE: #1]}}}
+% Tablas generadas por scripts/graficas.py: en Overleaf en images/; en el repo en ../resultados/tablas/.
+\newcommand{\tabla}[1]{%
+  \IfFileExists{images/#1}{\input{images/#1}}{%
+  \IfFileExists{../resultados/tablas/#1}{\input{../resultados/tablas/#1}}{%
+  \IfFileExists{#1}{\input{#1}}{\pendiente{falta #1}}}}}
+\newcommand{\repo}{\url{https://github.com/Whiteherobot/convolucion-pycuda}}
+\newcommand{\repoAnterior}{\url{https://github.com/Whiteherobot/convolucion-cuda}}
+
+\lstset{basicstyle=\ttfamily\small, columns=fullflexible, frame=single, breaklines=true,
+        keywordstyle=\bfseries, language=C++, literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1
+        {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1 {→}{{$\to$}}1}
+
+
+\begin{document}
+
+\renewcommand{\tablename}{Tabla}
+\renewcommand{\figurename}{Figura }
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%  INICIO PORTADA  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{titlepage}
+    \centering
+    \IfFileExists{images/logo.png}{\includegraphics[width=0.5\linewidth]{logo.png}}{}\\[1.0 cm]
+    \textsc{\LARGE Universidad Politécnica Salesiana}\\[2.0 cm]
+    \textsc{\Large CP}\\[0.5 cm]
+    \textsc{\large Computación Paralela}\\[0.5 cm]
+    \rule{\linewidth}{0.2 mm} \\[0.4 cm]
+    { \huge \bfseries \thetitle}\\
+    \rule{\linewidth}{0.2 mm} \\[1.5 cm]
+
+ \begin{flushleft} \large
+    \emph{Autores:}\\
+    \theauthor
+ \end{flushleft}
+
+  \begin{flushleft} \large
+    \emph{Profesores:}\\
+    Ing. Gabriel Leon \\
+  \end{flushleft}
+
+  \begin{flushleft} \normalsize
+    Repositorio: \repo\\
+    Commit medido: \texttt{a4061fb}\\
+    Commit de entrega: \texttt{\pendiente{hash del commit etiquetado entrega}}\\
+    Práctica 01: \repoAnterior, commit \texttt{b2b8014}
+  \end{flushleft}
+
+  \vfill
+
+  {\large \thedate}
+
+\end{titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%    FIN  PORTADA  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+\pagebreak
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%    INICIO   TEXTO   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introducción}
+
+Esta práctica continúa la práctica 01, en la que se aplicaron tres filtros de convolución
+(media, nitidez y laplaciano) a imágenes en escala de grises de $2000\times2000$,
+$4000\times4000$ y $6000\times6000$ píxeles con una versión secuencial en C/C++ y otra en CUDA C.
+En la práctica 02 el programa anfitrión pasa a Python: la carga de las imágenes, la preparación
+de las máscaras, la ejecución, la validación, la medición y el guardado de resultados se hacen
+desde Python, y el mismo kernel de la práctica 01 se ejecuta en la GPU por medio de PyCUDA
+\cite{klockner2012,pycudadoc}. Además se agrega una convolución secuencial escrita en Python.
+
+Así se comparan cuatro versiones de la misma operación: C/C++ secuencial, CUDA C, Python
+secuencial y PyCUDA. Se usan las mismas imágenes, máscaras y condiciones de la práctica 01, se
+comprueba que las cuatro den el mismo resultado numérico y se mide cómo cambia el tiempo con el
+filtro, la resolución, el tamaño de la máscara y los hilos por bloque. También se atiende la
+observación del docente sobre la práctica 01: además del calentamiento y del registro del estado
+de la GPU, se mide el ancho de banda efectivo del kernel para saber si el acceso a la memoria
+limita el rendimiento.
+
+\section{Solución}
+
+\subsection{Relación con la práctica 01}
+
+La práctica 01 se conserva sin cambios en la carpeta \texttt{practica01/} del repositorio,
+copiada del commit \texttt{b2b8014} de \repoAnterior. De ella se reutilizan las imágenes de
+entrada y el script que las genera, los coeficientes de las máscaras, el kernel de convolución y
+el programa completo de C/C++ y CUDA C, que se vuelve a compilar y a medir en el mismo equipo que
+las versiones nuevas. Lo único nuevo escrito en C/CUDA C es una herramienta que vuelca la salida
+sin recortar de esas dos versiones para la comparación numérica; está en \texttt{herramientas/}
+para no tocar la práctica anterior.
+
+\subsection{Programa en Python}
+
+El programa está en el paquete \texttt{src/convpy} y se ejecuta con
+\texttt{python -m convpy} y uno de tres comandos: \texttt{filtrar}, \texttt{probar} o
+\texttt{medir}. La tabla~\ref{tab:modulos} resume qué hace cada archivo.
+
+\begin{table}[H]
+\centering
+\caption{Organización del programa en Python.}\label{tab:modulos}
+\small
+\begin{tabular}{p{4.6cm}p{9.6cm}}
+\toprule
+Archivo & Función \\
+\midrule
+\texttt{imagen.py} & Lee la imagen, la pasa a grises y a \texttt{float32}; guarda la versión visible (recorte a 0--255 y redondeo) y la salida sin recortar (\texttt{.npy}). \\
+\texttt{mascaras.py} & Media $k\times k$, nitidez y laplaciano con los coeficientes de la práctica 01. \\
+\texttt{secuencial.py} & Convolución secuencial con listas y bucles de Python. \\
+\texttt{pycuda\_conv.py} y \texttt{kernels/convolucion.cu} & Contexto, compilación del kernel, reserva de memoria, transferencias, lanzamiento y tiempos con eventos CUDA. \\
+\texttt{validacion.py} & Error absoluto máximo y medio, y tolerancia. \\
+\texttt{medicion.py} y \texttt{experimentos.py} & Protocolo de medición, los cuatro experimentos y los archivos CSV. \\
+\texttt{\_\_main\_\_.py} & Comandos \texttt{filtrar}, \texttt{probar} y \texttt{medir}. \\
+\texttt{scripts/} & Datos del equipo, prueba de viabilidad, gráficas, evidencia visual y la corrida completa (\texttt{correr\_todo.sh}). \\
+\texttt{tests/} & Prueba manual, prueba de límites, equivalencia de las cuatro versiones y protocolo de medición. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Flujo de ejecución}
+
+Para una imagen y un filtro el programa sigue estos pasos:
+
+\begin{enumerate}
+\item Lee la imagen con Pillow, la convierte a escala de grises y la guarda en un arreglo NumPy
+      \texttt{float32} de forma (alto, ancho) y contiguo en memoria.
+\item Crea la máscara elegida como arreglo \texttt{float32} de $k\times k$.
+\item Ejecuta la convolución. En Python secuencial la imagen y la máscara se pasan a listas y
+      se recorren con bucles. En PyCUDA se reserva memoria en la GPU, se copian la imagen y la
+      máscara, se lanza el kernel y se trae el resultado.
+\item Compara la salida con la de C/C++ secuencial, antes de recortarla, y calcula el error
+      máximo y el medio.
+\item Escribe los tiempos en el CSV.
+\item Al guardar la imagen recorta cada valor a $[0,255]$ y lo redondea. Solo aquí se pierde
+      información; los cálculos y la validación usan los valores sin recortar.
+\end{enumerate}
+
+Por ejemplo, \texttt{python -m convpy filtrar datos/imagen\_4000.pgm resultados/media.pgm
+media 9 pycuda 256} aplica la media $9\times9$ con PyCUDA y 256 hilos por bloque, y guarda la
+imagen visible y la salida sin recortar.
+
+\subsection{Tipos de datos y disposición en memoria}
+
+Las imágenes, las máscaras y las salidas son arreglos \texttt{np.float32}, que corresponden al
+\texttt{float} del kernel. El ancho, el alto y el tamaño de la máscara se pasan como
+\texttt{np.int32}, que corresponde a \texttt{int}. Los arreglos se guardan por filas y son
+contiguos (\texttt{np.ascontiguousarray}), de modo que el píxel $(y, x)$ está en la posición
+$y\cdot\textit{ancho}+x$, igual que en el kernel. Antes de copiar a la GPU,
+\texttt{ejecutar} comprueba \texttt{dtype == float32} y \texttt{flags['C\_CONTIGUOUS']}, y
+rechaza cualquier otro arreglo, porque PyCUDA copia los bytes tal como están en memoria y un
+arreglo de otro tipo o no contiguo daría un resultado incorrecto sin ningún error.
+
+\section{Filtros y máscaras}
+
+\begin{table}[H]
+\centering
+\caption{Máscaras utilizadas (las mismas de la práctica 01).}
+\begin{tabular}{lcl}
+\toprule
+Filtro & Máscara & Efecto \\
+\midrule
+Media $k\times k$ ($k=3,9,21$) & todos los coeficientes $= \dfrac{1}{k^2}$ &
+  Suaviza la imagen \\[2ex]
+Nitidez $3\times3$ & $\begin{bmatrix}0&-1&0\\-1&5&-1\\0&-1&0\end{bmatrix}$ &
+  Realza bordes y detalles \\[4ex]
+Laplaciano $3\times3$ & $\begin{bmatrix}0&1&0\\1&-4&1\\0&1&0\end{bmatrix}$ &
+  Marca los cambios de intensidad \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las máscaras son las definiciones habituales de filtrado espacial \cite{gonzalez2018}. Los
+coeficientes de la media suman 1, así que el brillo promedio no cambia y la salida no sale de
+$[0,255]$. La nitidez equivale a la imagen original menos su laplaciano: en zonas uniformes deja
+el mismo valor y donde hay diferencias con los vecinos las aumenta. El laplaciano suma 0, por lo
+que en zonas uniformes da 0 y en los bordes da valores positivos o negativos. El tamaño de la
+máscara solo se varía con la media; nitidez y laplaciano se usan en $3\times3$.
+
+Las cuatro versiones calculan una correlación, sin invertir la máscara. Como las tres máscaras
+son simétricas, el resultado es igual al de la convolución. Fuera de la imagen se toma el valor
+0 y la entrada y la salida van en arreglos separados.
+
+\section{Distribución del trabajo en la GPU}
+
+El kernel es el de la práctica 01, sin cambios de lógica. Usa bloques e hilos solo en la
+dimensión X y cada hilo calcula un píxel de salida leyendo la imagen y la máscara desde memoria
+global:
+
+\begin{lstlisting}
+int tid = blockIdx.x * blockDim.x + threadIdx.x;  // índice global del hilo
+if (tid < ancho * alto) {                          // el último bloque puede sobrar
+    fila    = tid / ancho;
+    columna = tid % ancho;
+    for (i = 0; i < k; i++)
+        for (j = 0; j < k; j++) {
+            int y = fila + i - radio, x = columna + j - radio;
+            if (y >= 0 && y < alto && x >= 0 && x < ancho)   // ceros fuera
+                suma += entrada[y * ancho + x] * mascara[i * k + j];
+        }
+    salida[tid] = suma;
+}
+\end{lstlisting}
+
+Como la imagen está guardada por filas, la fila del píxel es el cociente entero del índice
+global entre el ancho y la columna es el residuo. Los vecinos que caen fuera de la imagen no se
+suman, lo que equivale a la extensión con ceros. Desde Python el kernel se compila y se lanza
+así:
+
+\begin{lstlisting}[language=Python]
+modulo = SourceModule(codigo_kernel, cache_dir=False)       # compila con nvcc
+kernel = modulo.get_function("kernel_convolucion")
+dev_entrada = cuda.mem_alloc(imagen.nbytes)                  # igual salida y máscara
+cuda.memcpy_htod(dev_entrada, imagen)                        # CPU → GPU
+cuda.memcpy_htod(dev_mascara, mascara)
+bloques = (n + hilos - 1) // hilos
+kernel(dev_entrada, dev_salida, np.int32(ancho), np.int32(alto),
+       dev_mascara, np.int32(k), block=(hilos, 1, 1), grid=(bloques, 1))
+cuda.memcpy_dtoh(salida, dev_salida)                         # GPU → CPU
+\end{lstlisting}
+
+El número de bloques se redondea hacia arriba para cubrir los $n=\textit{ancho}\cdot\textit{alto}$
+píxeles, y los hilos con $\textit{tid}\ge n$ no hacen nada. Las imágenes de los experimentos son
+múltiplos de 128, 256 y 512 (por ejemplo, $4000^2/256=62\,500$ bloques), por eso el control de
+límites se prueba con una imagen de $1001\times777$: tiene $777\,777$ píxeles y con 256 hilos
+se lanzan 3039 bloques, de los que los últimos 207 hilos quedan sin trabajo. El contexto de la
+GPU se crea una sola vez con \texttt{cuda.Device(0).make\_context()} y el kernel se compila una
+sola vez al crear la clase \texttt{ConvolucionPyCUDA}; los dos tiempos se registran aparte. La
+compilación se hace sin la caché de PyCUDA para que su tiempo sea el costo real de
+\texttt{nvcc}.
+
+\section{Equipo y preparación de datos}
+
+Las cuatro versiones se midieron en el mismo equipo, el portátil de Michael Lata, el mismo de
+la práctica 01. Los datos salen de \texttt{resultados/equipo.txt}, que genera
+\texttt{scripts/info\_equipo.sh} al comienzo de cada corrida.
+
+\begin{table}[H]
+\centering
+\caption{Equipo de medición (corrida del 14 de noviembre de 2026).}
+\begin{tabular}{ll}
+\toprule
+CPU & Intel Core i7-13650HX, 14 núcleos, 20 hilos \\
+RAM & 15 GiB \\
+GPU & NVIDIA GeForce RTX 4060 Laptop GPU, 8188 MiB, capacidad 8.9 \\
+Ancho de banda pico de la memoria & 256 GB/s (8001 MHz, bus de 128 bits) \\
+Controlador NVIDIA y CUDA Toolkit & 620.70.06 y 13.4 \\
+Compilador de C/C++ & GCC 16.2.1 \\
+Sistema operativo & Omarchy (Arch Linux), kernel Linux 7.3.3-cachyos, x86\_64 \\
+Python y bibliotecas & Python 3.14.9, NumPy 2.5.4, PyCUDA 2026.1, Pillow 13.0.0, Matplotlib 3.11.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El ancho de banda pico se calcula con los atributos del dispositivo:
+$2\times\text{reloj de memoria}\times\text{ancho del bus}/8$. El entorno se prepara con un
+entorno virtual y las dependencias con versiones fijas de \texttt{requirements.txt}:
+
+\begin{lstlisting}[language=bash]
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python3 practica01/scripts/preparar_imagenes.py practica01/datos/original.jpg
+\end{lstlisting}
+
+Las imágenes son exactamente las de la práctica 01. Salen de la foto
+\texttt{original.jpg} ($6200\times8272$): se pasa a grises, se recorta un cuadrado centrado de
+$6200\times6200$ y se reduce con LANCZOS a 6000, 4000 y 2000 píxeles de lado, así que ninguna
+imagen se amplía. Las cuatro versiones leen los mismos archivos
+\texttt{datos/imagen\_\{2000,4000,6000\}.pgm}.
+
+\section{Metodología}\label{sec:metodologia}
+
+Se cambia un solo factor por experimento. Salvo en el de hilos, se usan 256 hilos por bloque y
+el número de bloques se ajusta a la imagen.
+
+\begin{table}[H]
+\centering
+\caption{Experimentos.}
+\small
+\begin{tabular}{p{2.2cm}p{5.6cm}p{2.9cm}p{3.4cm}}
+\toprule
+Experimento & Configuración & Fijo & Versiones \\
+\midrule
+1. Filtro & media, nitidez y laplaciano $3\times3$ & $4000\times4000$, 256 hilos & las cuatro \\
+2. Resolución & 2000, 4000 y 6000 & media $9\times9$, 256 hilos & las cuatro \\
+3. Máscara & media $k=3, 9, 21$ (9, 81 y 441 productos por píxel) & $4000\times4000$, 256 hilos & las cuatro \\
+4. Hilos por bloque & 128, 256 y 512 (el límite del equipo es 1024) & media $9\times9$, $4000\times4000$ & CUDA C y PyCUDA \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Protocolo}
+
+Para cada configuración se mide primero Python secuencial, con una ejecución de calentamiento y
+5 repeticiones. Después se mide PyCUDA: se registra la primera llamada, sin calentar, se mantiene
+la GPU trabajando al menos 2\,s seguidos y se toman 5 repeticiones una tras otra, guardando los
+tiempos en memoria para no escribir archivos entre ellas. Al final se valida la salida. Es el
+mismo orden de la práctica 01, que se adoptó porque la GPU del portátil baja de frecuencia y de
+velocidad de enlace PCIe cuando espera a la CPU.
+
+C/C++ y CUDA C se miden con el binario de la práctica 01, compilado en modo Release, con el mismo
+protocolo (5 repeticiones y 2\,s de calentamiento de GPU). Todos los tiempos de C/C++ y CUDA C de
+este informe son nuevos: se volvieron a medir en la misma corrida y en el mismo equipo que las
+versiones de Python, y no se reutilizan los de la práctica 01.
+
+La guía permite que las configuraciones repetidas compartan mediciones. Por eso Python
+secuencial se mide una sola vez para media $3\times3$ en 4000 (experimentos 1 y 3) y para media
+$9\times9$ en 4000 (experimentos 2 y 3); en el CSV esas filas aparecen en los dos experimentos con
+una nota. PyCUDA se mide de nuevo en cada experimento.
+
+\subsection{Alcance de cada tiempo}
+
+\begin{itemize}
+\item \textbf{Python secuencial}: \texttt{time.perf\_counter()} solo alrededor de la
+      convolución. Pasar la imagen a listas es preparación de datos y queda fuera, igual que leer
+      el archivo. Durante la medición se desactiva el recolector de basura de Python, como hace
+      \texttt{timeit}.
+\item \textbf{PyCUDA}: eventos CUDA (\texttt{cuda.Event}) antes de la copia CPU$\to$GPU, después
+      de ella, después del kernel y después de la copia GPU$\to$CPU. Antes de leer los tiempos se
+      sincroniza con el último evento. La copia CPU$\to$GPU incluye la imagen y la máscara y el
+      tiempo conjunto es la suma de las dos copias y el kernel.
+\item \textbf{Fuera de la medición}: lectura y escritura de imágenes, visualización, creación de
+      máscaras, escritura del CSV y la reserva y liberación de memoria
+      (\texttt{mem\_alloc} y \texttt{free}), igual que \texttt{cudaMalloc} y \texttt{cudaFree}
+      en CUDA C. La creación del contexto y la compilación del kernel se miden una sola vez y se
+      reportan aparte. La memoria del host es paginable en las dos versiones GPU.
+\end{itemize}
+
+\subsection{Viabilidad de Python secuencial}
+
+Antes de los experimentos se midió Python secuencial en un recorte de $500\times500$ y se
+estimó el resto por número de píxeles (\texttt{resultados/viabilidad\_python.csv}). Son
+estimaciones para planificar, no resultados: unos 0.75\,s por megapíxel con $3\times3$,
+5.3\,s con $9\times9$ y 26\,s con $21\times21$. El caso más pesado, media $21\times21$ en 4000,
+quedaba en unos 7 minutos por ejecución, así que todas las configuraciones eran viables. Aun así,
+el programa fija un límite de 60 minutos por configuración: si el calentamiento indica que las
+5 repeticiones no caben, se registra el tiempo transcurrido, la configuración y el motivo, y se
+marca como «no completada», sin presentar estimaciones como tiempos medidos. En la corrida final
+ninguna configuración quedó no completada: las 12 tienen sus 5 repeticiones válidas en las cuatro
+versiones que les corresponden. El caso más lento, media $21\times21$ en 4000, tardó 475\,s por
+ejecución, cerca de lo estimado. La corrida completa duró 88 minutos, 86 de ellos en las
+mediciones de Python y PyCUDA.
+
+\subsection{Estadísticas, ancho de banda y registros}
+
+Para cada configuración se reporta la mediana de las 5 repeticiones y, como variabilidad, la
+desviación estándar, el mínimo, el máximo y el coeficiente de variación (desviación entre
+mediana). La aceleración de cómputo es $T_{sec}/T_{kernel}$ y la aceleración con transferencias
+es $T_{sec}/T_{total}$, las dos con medianas; no se calculan aceleraciones con ejecuciones
+incompletas.
+
+El ancho de banda efectivo del kernel es $B = 2\cdot n\cdot 4\,\text{B} / T_{kernel}$: cuenta
+leer la imagen una vez y escribir la salida una vez, en \texttt{float} de 4 bytes. Es el tráfico
+mínimo con la memoria global; las lecturas repetidas de los vecinos las atiende la caché. Si $B$
+se acerca al pico de la GPU, el kernel está limitado por la memoria; si queda muy por debajo, lo
+limita el cálculo.
+
+Durante toda la corrida \texttt{nvidia-smi} registra cada 200\,ms el estado de rendimiento, los
+relojes de la GPU y de la memoria, la generación del enlace PCIe, la potencia y la temperatura,
+y el programa guarda la hora de inicio y fin de cada bloque medido para poder cruzarlos. Todo se
+ejecuta con \texttt{scripts/correr\_todo.sh}. Los registros quedan en
+\texttt{resultados/mediciones.csv} (Python y PyCUDA) y \texttt{resultados/p01\_mediciones.csv}
+(C/C++ y CUDA C), con una fila por repetición: versión, filtro, resolución, máscara, hilos,
+bloques, repetición, tiempos, ancho de banda, unidad y estado (\texttt{ok},
+\texttt{calentamiento} o \texttt{no\_completada}). \texttt{scripts/graficas.py} genera desde
+esos archivos todas las tablas y gráficas del informe.
+
+\section{Validación}
+
+\subsection{Prueba manual}
+
+Se usó la matriz $5\times5$ y la máscara de la figura 1 de la guía. A mano, el píxel (1,1) da
+$35(-2)+40(-1)+41(0)+40(-1)+40(1)+42(1)+42(0)+46(1)+50(2)=78$, el (1,2) da 87 y la esquina
+(0,0), donde solo cuatro vecinos caen dentro de la imagen, da $35(1)+40(1)+40(1)+40(2)=195$.
+Python secuencial y PyCUDA dan exactamente esos valores (\texttt{tests/test\_manual.py}), igual
+que C/C++ y CUDA C en la práctica 01 (\texttt{convolucion probar}).
+
+\subsection{Prueba de límites}
+
+Con una imagen aleatoria de $1001\times777$, cuyo número de píxeles no es múltiplo de 128, 256
+ni 512, PyCUDA coincide con Python secuencial en todos los píxeles, incluido el último, que
+pertenece al bloque incompleto (\texttt{tests/test\_limites.py}). Con una imagen de unos y la
+media $3\times3$, la esquina da $4/9$, el borde $6/9$ y el interior 1, lo que confirma la
+extensión con ceros. El programa también rechaza 0 y 1025 hilos por bloque y una imagen en
+\texttt{float64}.
+
+\subsection{Comparación de las cuatro versiones}
+
+La referencia es C/C++ secuencial. Para cada configuración de los experimentos se calcula, sobre
+los valores sin recortar, el error absoluto máximo $e_{max}=\max_i |r_i-v_i|$ y el medio
+$\bar e = \frac1n\sum_i |r_i-v_i|$ de CUDA C, Python secuencial y PyCUDA. La salida sin recortar
+de C/C++ y CUDA C se obtiene con \texttt{herramientas/volcar\_crudo}, que usa los mismos fuentes
+de la práctica 01. La tabla~\ref{tab:validacion} resume el peor caso de cada versión; el detalle
+por configuración está en \texttt{resultados/validacion.csv}.
+
+\begin{table}[H]
+\centering
+\caption{Error absoluto contra C/C++ secuencial, antes del recorte.}\label{tab:validacion}
+\tabla{tabla_validacion.tex}
+\end{table}
+
+La tolerancia es $10^{-3}$ en valor absoluto. Un \texttt{float} tiene unos 7 dígitos
+significativos, así que con valores de hasta 255 el redondeo de una suma es del orden de
+$10^{-5}$; según el orden de las operaciones las diferencias acumuladas quedan entre $10^{-5}$ y
+$10^{-4}$. La tolerancia deja un margen de 10 veces sobre eso y es 500 veces menor que 0.5, la
+diferencia mínima que podría cambiar un píxel al redondear para guardar. Un error de lógica, como
+un vecino mal indexado, daría diferencias de varias unidades. Las 33 comparaciones de la corrida
+final quedan dentro de la tolerancia; el error más grande es $3.97\times10^{-4}$, de Python
+secuencial con la media $21\times21$.
+
+Las diferencias tienen dos causas. Con nitidez y laplaciano los coeficientes y los píxeles son
+enteros, las sumas son exactas y el error debería ser 0. Con la media, $1/k^2$ no se representa
+exacto y cada versión redondea de forma distinta: C/C++ redondea cada multiplicación y cada suma
+en \texttt{float}, la GPU puede unir la multiplicación y la suma en una sola operación (FMA) y
+Python secuencial acumula en el \texttt{float} de Python, que es de 64 bits, y redondea a 32 bits
+una sola vez al final. Esto último es una diferencia con el requisito de usar la misma precisión
+de acumulación: Python no tiene un tipo de 32 bits propio y, por indicación del docente, el
+cálculo de la versión secuencial no usa NumPy. Su efecto es el error que muestra la tabla, del
+mismo orden que el de las otras versiones.
+
+\section{Imágenes representativas}\label{sec:imagenes}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{evidencia_filtros.png}
+\caption{Imagen original de $4000\times4000$ y resultado de los tres filtros con PyCUDA. Abajo,
+un recorte de $400\times400$ de la misma región a resolución completa, porque en la imagen
+reducida el efecto de los filtros de $3\times3$ casi no se nota.}
+\end{figure}
+
+La media $9\times9$ suaviza la imagen y borra el grano fino. La nitidez marca más los bordes y
+también el ruido. El laplaciano se ve casi negro: antes del recorte cerca del 48\,\% de sus
+valores son negativos y al guardar pasan a 0, y los positivos son pequeños
+(\texttt{resultados/rangos\_filtros.csv}): el 48.1\,\% de los píxeles queda bajo 0 y el valor
+mínimo es $-501$. En la nitidez solo el 1.15\,\% queda bajo 0 y el 0.67\,\% sobre 255, con
+valores entre $-60$ y 745; la media se mantiene entre 10.6 y 239. Por eso la validación se hace
+con los valores sin recortar.
+
+\section{Resultados}
+
+\subsection{Tiempos}
+
+La tabla~\ref{tab:tiempos} reúne las medianas de las cuatro versiones y la
+tabla~\ref{tab:variabilidad} su coeficiente de variación. Python secuencial está en segundos y
+el resto en milisegundos.
+
+\begin{table}[H]
+\centering
+\caption{Mediana de 5 repeticiones. n.c.: no completada.}\label{tab:tiempos}
+\small
+\tabla{tabla_tiempos.tex}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Coeficiente de variación en \% (desviación estándar / mediana).}\label{tab:variabilidad}
+\small
+\tabla{tabla_variabilidad.tex}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{exp1_filtros.png}
+\caption{Experimento 1: tiempo de cada versión por tipo de filtro (escala logarítmica).}
+\end{figure}
+
+Con máscaras de $3\times3$ el tipo de filtro casi no cambia el tiempo: las tres máscaras
+tienen el mismo tamaño y se recorren completas, aunque la nitidez y el laplaciano tengan ceros.
+Python secuencial tarda entre 13.1 y 13.7\,s, C/C++ entre 161 y 169\,ms, y las dos versiones GPU
+unos 11\,ms en total, de los que el kernel es solo 0.64--0.67\,ms. En la GPU casi todo el tiempo
+es copiar la imagen de ida y de vuelta.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{exp2_resolucion.png}
+\caption{Experimento 2: tiempo de cada versión por resolución (escala logarítmica).}
+\end{figure}
+
+Al pasar de 2000 a 4000 y a 6000 los píxeles crecen 4 y 9 veces, y los tiempos crecen en la
+misma proporción en todas las versiones. Python secuencial pasa de 23.1 a 95.3 y a 213\,s
+(4.1 y 9.2 veces) y el kernel de PyCUDA de 0.71 a 2.81 y a 6.27\,ms (4.0 y 8.8 veces). Las
+barras de CUDA C y PyCUDA son casi iguales en las tres resoluciones.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{exp3_mascara.png}
+\caption{Experimento 3: tiempo de cada versión por tamaño de máscara (escala logarítmica).}
+\end{figure}
+
+La máscara es el factor que más pesa en las versiones secuenciales. De $3\times3$ a
+$21\times21$, Python secuencial pasa de 13.4 a 475\,s y C/C++ de 169\,ms a 6.8\,s. En la GPU el
+kernel crece de 0.65 a 14.8\,ms, pero el tiempo total solo de 11.0 a 25.9\,ms, porque las copias,
+que no dependen de la máscara, son las mismas.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{exp4_hilos.png}
+\caption{Experimento 4: kernel y tiempo total de CUDA C y PyCUDA por hilos por bloque.}
+\end{figure}
+
+Las tres configuraciones dan prácticamente el mismo tiempo. El kernel de CUDA C mide 2.782,
+2.781 y 2.804\,ms con 128, 256 y 512 hilos, y el de PyCUDA 2.799, 2.802 y 2.825\,ms. Con
+transferencias, todas quedan entre 13.10 y 13.19\,ms.
+
+\subsection{Aceleraciones}
+
+\begin{table}[H]
+\centering
+\caption{Aceleración de cómputo (solo kernel) y con transferencias, y cuántas veces más lento
+es Python secuencial que C/C++.}
+\small
+\tabla{tabla_aceleraciones.tex}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{aceleraciones.png}
+\caption{Aceleración de CUDA C respecto de C/C++ y de PyCUDA respecto de Python secuencial.}
+\end{figure}
+
+Solo en el kernel, CUDA C es entre 251 y 460 veces más rápido que C/C++, y PyCUDA entre 19\,600
+y 34\,100 veces más rápido que Python secuencial. Al incluir las copias las cifras bajan mucho
+con máscaras pequeñas: con $3\times3$ CUDA C queda en 15 veces y PyCUDA en unas 1200, porque el
+kernel es menos del 6\,\% del tiempo total. Con la media $21\times21$ el cálculo pesa más y la
+aceleración con transferencias sube a 264 veces en CUDA C y a 18\,372 en PyCUDA. La aceleración
+de PyCUDA es mucho mayor porque Python secuencial es entre 70 y 87 veces más lento que C/C++
+(tabla~\ref{tab:tiempos}), no porque su GPU trabaje mejor: los tiempos de GPU de las dos
+versiones son casi iguales.
+
+\subsection{CUDA C y PyCUDA}
+
+Las dos versiones GPU ejecutan el mismo kernel en la misma GPU, con los mismos hilos y bloques, y
+se miden con eventos CUDA en los mismos puntos, así que se pueden comparar directamente.
+
+\begin{table}[H]
+\centering
+\caption{Medianas en ms de CUDA C (C) y PyCUDA (Py), y diferencia de PyCUDA respecto de CUDA C.}
+\resizebox{\linewidth}{!}{\tabla{tabla_cudac_pycuda.tex}}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{cudac_vs_pycuda_desglose.png}
+\caption{Desglose del tiempo GPU en copia CPU$\to$GPU, kernel y copia GPU$\to$CPU.}
+\end{figure}
+
+Las barras de CUDA C (lisas) y de PyCUDA (rayadas) tienen la misma forma en todas las
+configuraciones. La copia CPU$\to$GPU de una imagen de 4000 (64\,MB) tarda unos 5.3\,ms y la de
+vuelta unos 5.0\,ms, unos 12\,GB/s, en las dos versiones. El kernel solo domina con la media
+$21\times21$.
+
+\begin{table}[H]
+\centering
+\caption{Costo único de PyCUDA, fuera de las mediciones del kernel.}
+\tabla{tabla_inicio_pycuda.tex}
+\end{table}
+
+\subsection{Ancho de banda efectivo}
+
+\begin{table}[H]
+\centering
+\caption{Ancho de banda efectivo del kernel y fracción del pico de la memoria de la GPU.}
+\small
+\tabla{tabla_ancho_banda.tex}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{ancho_banda.png}
+\caption{Ancho de banda efectivo de CUDA C y PyCUDA frente al pico de la GPU.}
+\end{figure}
+
+Con las máscaras de $3\times3$ el kernel llega a unos 200\,GB/s en CUDA C y a 192--198\,GB/s en
+PyCUDA, entre el 75 y el 79\,\% del pico de 256\,GB/s. A ese nivel el kernel está limitado por la
+memoria: hace pocas operaciones por píxel y casi todo el tiempo es leer y escribir. Con
+$9\times9$ baja a unos 46\,GB/s (18\,\%) y con $21\times21$ a 8.6\,GB/s (3\,\%). Ahí el tráfico
+mínimo con la memoria global es el mismo, pero cada hilo hace 81 o 441 lecturas y productos, así
+que lo limita el cálculo y el acceso a la caché.
+
+\subsection{Calentamiento y estado de la GPU}
+
+\begin{table}[H]
+\centering
+\caption{Kernel en la primera llamada de cada configuración (frío) y mediana tras el
+calentamiento.}\label{tab:calentamiento}
+\small
+\tabla{tabla_calentamiento.tex}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\linewidth]{calentamiento.png}
+\caption{Tiempo del kernel sin calentar y después de calentar.}
+\end{figure}
+
+La primera llamada sin calentar puede ser hasta 19 veces más lenta que las siguientes, pero no
+por algo propio de PyCUDA. El factor aparece cuando la GPU estuvo un rato sin trabajo antes de la
+llamada. En la P02, antes de cada configuración se miden varios minutos de Python secuencial en
+la CPU, y el kernel frío de PyCUDA pasa de 0.65 a 12.6\,ms con $3\times3$ y de 2.8 a 33.5\,ms con
+$9\times9$. En cambio, en el experimento 4 y en media $9\times9$ del experimento 3, Python no se
+midió de nuevo y PyCUDA se ejecutó justo después de otra medición GPU: ahí la llamada fría tarda
+lo mismo que la caliente (factor 1.0 a 1.1). CUDA C muestra lo mismo, porque en cada
+configuración se mide antes C/C++ secuencial. El factor es 1.0 cuando esa medición dura 1 o 2\,s
+($3\times3$, o $9\times9$ en 2000) y unas 12 veces cuando dura 6\,s o más ($9\times9$ en 4000 y
+6000, y $21\times21$).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{estado_gpu_p02_ventanas.png}
+\caption{Relojes de la GPU desde 3\,s antes hasta 1\,s después de las repeticiones de PyCUDA de
+cada configuración; en gris, los 2\,s de calentamiento. La línea de tiempo completa de la P02 y
+la de la P01 están en \texttt{resultados/graficas/estado\_gpu\_p02.png} y
+\texttt{estado\_gpu\_p01.png}.}
+\end{figure}
+
+La figura explica el factor anterior. Cuando la GPU espera a la CPU, baja al estado P8, con el
+reloj de cálculo en 210\,MHz, el de memoria en 405\,MHz y el enlace PCIe en generación 1. Al
+empezar el calentamiento sube en unos 0.3\,s a P0, con 2535\,MHz, 8001\,MHz y PCIe generación 4,
+y se mantiene así hasta el final de las repeticiones. Los 2\,s de calentamiento alcanzan con
+margen. Los factores de la tabla~\ref{tab:calentamiento} coinciden con esos relojes. Con
+$3\times3$, donde el kernel está limitado por la memoria, el factor es 19.3, y
+$8001/405=19.8$. Con $9\times9$ y $21\times21$, donde lo limita el cálculo, es de 10 a 12, y
+$2535/210=12.1$. Esto sugiere que la llamada fría corre casi completa con los relojes de bajo
+consumo, más que pagar un costo de inicio de PyCUDA. En las 24 configuraciones medidas, 12 de la P01 y 12 de la P02, todas las muestras
+cercanas a las repeticiones están en P0, a reloj máximo, en PCIe generación 4 y por debajo de
+64\,$^\circ$C (\texttt{resultados/estado\_gpu\_ventanas.csv} y
+\texttt{tablas/tabla\_estado\_gpu.tex}). No hubo bajadas de frecuencia por temperatura durante
+las mediciones.
+
+\section{Análisis}
+
+\subsection{¿Qué partes del programa se trasladaron a Python y qué partes del kernel se reutilizaron?}
+
+Pasó a Python todo el programa anfitrión: la lectura de la imagen y su conversión a grises y a
+\texttt{float32}, la construcción de las máscaras, la elección del filtro, la reserva de memoria
+en la GPU, las copias en los dos sentidos, la configuración de bloques e hilos, el lanzamiento,
+la medición con eventos, la validación, la escritura de los CSV y el guardado de las imágenes.
+También se escribió en Python la nueva convolución secuencial. Del kernel se reutilizó todo: el
+código CUDA C de \texttt{kernel\_convolucion} es el de la práctica 01 sin cambios de lógica, con
+la misma distribución (un hilo por píxel, solo en X), el mismo control de límites, la extensión
+con ceros y la lectura desde memoria global. Lo único que cambió es la forma de compilarlo y
+llamarlo: en vez de \texttt{nvcc} y la sintaxis \texttt{<<<bloques, hilos>>>}, se compila con
+\texttt{SourceModule} y se llama como una función de Python con \texttt{block} y \texttt{grid}.
+
+\subsection{¿Las cuatro versiones producen resultados equivalentes?}
+
+Sí. Las 33 comparaciones contra C/C++ quedan dentro de la tolerancia de $10^{-3}$. Con nitidez y
+laplaciano las cuatro versiones dan exactamente lo mismo (error 0). Con la media, CUDA C y PyCUDA
+tienen el mismo error en todas las configuraciones, de $4.6\times10^{-5}$ a $1.2\times10^{-4}$
+como máximo, lo que es coherente con que ejecutan el mismo kernel en la misma GPU. Python
+secuencial tiene el error más grande, de $1.4$ a $1.7\times10^{-4}$ con $9\times9$ y $3.97\times10^{-4}$ con
+$21\times21$, porque acumula en 64 bits y C/C++ en 32. Por lo tanto, buena parte de esa
+diferencia es el redondeo de la referencia y no de Python. Las diferencias son de redondeo y
+aparecen solo con la media, cuyos coeficientes $1/k^2$ no son exactos; crecen con la máscara
+porque hay más sumas.
+
+\subsection{¿Cómo influyen la resolución y la máscara en los tiempos de Python secuencial y PyCUDA?}
+
+Las dos versiones hacen $n\cdot k^2$ multiplicaciones y sumas, así que se espera que el tiempo
+de cálculo crezca con el número de píxeles y con el cuadrado del lado de la máscara. En Python
+secuencial todo el tiempo es cálculo. En PyCUDA las transferencias dependen solo del número de
+píxeles y no de la máscara, así que pesan más con máscaras pequeñas.
+
+Con la resolución, los dos crecen como se esperaba. Python secuencial tarda 4.1 y 9.2 veces más
+en 4000 y 6000 que en 2000, y el kernel de PyCUDA 4.0 y 8.8 veces; los píxeles crecen 4 y 9
+veces. El total de PyCUDA crece 4.0 y 8.8 veces, porque las copias también son proporcionales a
+los píxeles.
+
+Con la máscara el crecimiento es menor que el número de productos, que se multiplica por 9 y por
+49. Python secuencial tarda 7.1 y 35.6 veces más con $9\times9$ y $21\times21$ que con
+$3\times3$. Una explicación posible, que no se midió por separado, es que parte del costo por
+píxel no depende de la máscara: recorrer la imagen, calcular índices y guardar el resultado. En
+PyCUDA el kernel crece solo 4.3 y 22.9 veces, porque con $3\times3$ está limitado por la memoria
+y no por el cálculo (sección de ancho de banda). En el total de PyCUDA, las copias son el 94\,\%
+con $3\times3$, el 79\,\% con $9\times9$ y el 43\,\% con $21\times21$.
+
+\subsection{¿Qué diferencias hay entre CUDA C y PyCUDA al medir solo el kernel y al incluir transferencias y gestión desde el host?}
+
+Como el kernel y la GPU son los mismos, se espera que el tiempo del kernel sea prácticamente
+igual en las dos versiones; PyCUDA no tiene por qué ser más rápido. Las diferencias deberían
+aparecer en lo que hace el host: en PyCUDA cada copia y cada lanzamiento pasa por Python y por
+la conversión de sus argumentos.
+
+Los datos lo confirman. En el kernel, PyCUDA es más lento que CUDA C en las 12 configuraciones,
+pero solo entre 12 y 31\,$\mu$s, del 0.1 al 4.8\,\%. La diferencia en microsegundos es casi la misma
+con kernels de 0.6 y de 15\,ms, así que en porcentaje pesa más con las máscaras pequeñas. Como
+los eventos encierran el lanzamiento, una hipótesis coherente con eso es que mide el tiempo que
+Python tarda en preparar y lanzar el kernel mientras la GPU espera. No se midió por separado. Con
+transferencias la diferencia queda entre 0 y 1.3\,\% (de 1 a 169\,$\mu$s) y no siempre favorece a la
+misma versión en las copias. Además, PyCUDA tiene un costo único de 110\,ms para crear el
+contexto y de 182\,ms para compilar el kernel. Eso no entra en las mediciones porque se paga una
+vez por ejecución del programa, pero equivale a unas 26 ejecuciones completas de la convolución
+$3\times3$ en 4000.
+
+\subsection{¿Qué configuración de hilos por bloque obtuvo mejores resultados y con qué variabilidad?}
+
+La de menor mediana de kernel fue 256 hilos en CUDA C (2.781\,ms) y 128 en PyCUDA (2.799\,ms).
+Entre 128 y 256 la diferencia es de 1 a 3\,$\mu$s, menor que la desviación entre repeticiones (de 1 a
+6\,$\mu$s), así que no se puede decir que una sea mejor. Con 512 hilos el kernel fue un 0.8\,\% más
+lento en las dos versiones (de 22 a 27\,$\mu$s), una diferencia pequeña pero mayor que la
+variabilidad.
+El coeficiente de variación del kernel quedó entre 0.0 y 0.2\,\% en las tres configuraciones y
+el del total entre 0.2 y 0.6\,\%. Como en la práctica 01, el número de hilos por bloque casi no
+importa para este kernel: cada hilo trabaja solo y la ocupación de la GPU es alta en los tres
+casos.
+
+\section{Limitaciones}
+
+Esta sección responde a la pregunta 6 del análisis: qué limitaciones del equipo o del
+procedimiento afectan las conclusiones.
+
+\begin{itemize}
+\item Todo se midió en un solo equipo, un portátil. Su GPU cambia de frecuencia y de enlace PCIe
+      según la carga y la temperatura; el calentamiento y el registro de \texttt{nvidia-smi}
+      reducen ese efecto, pero los tiempos podrían ser distintos en otro equipo o con otra
+      refrigeración.
+\item Python secuencial acumula en 64 bits y las otras tres versiones en 32 bits, como se
+      explicó en la validación. No cambia la conclusión sobre la equivalencia, pero las cuatro
+      versiones no son idénticas en precisión.
+\item La comparación entre las versiones secuenciales refleja también la diferencia entre un
+      lenguaje compilado y uno interpretado, no solo el algoritmo. La aceleración de PyCUDA
+      respecto de Python secuencial es mucho mayor que la de CUDA C respecto de C/C++ en buena
+      parte porque la referencia es más lenta.
+\item El ancho de banda efectivo cuenta solo el tráfico mínimo (leer la imagen y escribir la
+      salida una vez). Las lecturas repetidas de los vecinos salen de la caché y no se cuentan,
+      así que es una medida de cuánto se aprovecha la memoria, no del tráfico real.
+\item La memoria del host es paginable. Con memoria fijada (\emph{pinned}) las copias podrían ser
+      más rápidas, pero no se probó para mantener las mismas condiciones que la práctica 01.
+\item Se tomaron 5 repeticiones por configuración, el mínimo de la guía. La variabilidad
+      reportada es útil para comparar, pero con pocas muestras.
+\item Las copias tuvieron dos valores atípicos: una copia GPU$\to$CPU de 8.3\,ms en PyCUDA con
+      nitidez y otra de 9.0\,ms con media $9\times9$ en 4000, frente a unos 5\,ms en las demás.
+      Por eso el coeficiente de variación del total sube a 16.6 y 14.9\,\% en esas dos
+      configuraciones. Se usan medianas para que un valor así no cambie los resultados. Python
+      secuencial tuvo algo parecido: una repetición lenta en 2000 y otra en 4000 con $9\times9$
+      (coeficiente de 4.3\,\%).
+\item La misma configuración medida en dos experimentos distintos puede variar más que dentro de
+      un experimento. C/C++ con media $3\times3$ en 4000 dio 161\,ms en el experimento 1 y
+      169\,ms en el 3. Las diferencias de menos del 5\,\% entre configuraciones no deben leerse
+      como resultados.
+\item El portátil tenía otros programas abiertos: al empezar la corrida usaba 8.2\,GiB de RAM y
+      7.4\,GiB de memoria de intercambio. No hubo otros procesos en la GPU, que se mantuvo en P0
+      durante las mediciones, pero la carga en la CPU puede haber afectado a las versiones
+      secuenciales.
+\item Ninguna configuración quedó no completada, así que todas las aceleraciones se calculan con
+      mediciones completas.
+\end{itemize}
+
+\section{Conclusiones}
+
+\begin{itemize}
+\item El programa anfitrión se migró completo a Python, y el kernel de la práctica 01 se
+      reutilizó sin cambios de lógica, compilado con \texttt{SourceModule}. Las cuatro versiones
+      se midieron en el mismo equipo, en una sola corrida y sin configuraciones incompletas.
+\item Las cuatro versiones son equivalentes. Con nitidez y laplaciano dan exactamente lo mismo, y
+      con la media el error máximo contra C/C++ es $3.97\times10^{-4}$, por debajo de la tolerancia
+      de $10^{-3}$. CUDA C y PyCUDA tienen el mismo error en todas las configuraciones.
+\item La GPU acelera mucho el cálculo: entre 251 y 460 veces frente a C/C++ y entre 19\,600 y
+      34\,100 veces frente a Python secuencial, si se cuenta solo el kernel. Las copias reducen
+      esas cifras, sobre todo con máscaras pequeñas, donde son el 94\,\% del tiempo: con
+      $3\times3$ la aceleración con transferencias es de 15 veces frente a C/C++.
+\item CUDA C y PyCUDA rinden casi igual. El kernel de PyCUDA tarda de 12 a 31\,$\mu$s más y el total
+      difiere como mucho un 1.3\,\%. El costo propio de PyCUDA está fuera del cálculo: 110\,ms para
+      crear el contexto y 182\,ms para compilar el kernel, una sola vez.
+\item Con máscaras de $3\times3$ el kernel aprovecha entre el 75 y el 79\,\% del ancho de banda
+      pico de la memoria. Con máscaras mayores pasa a estar limitado por el cálculo.
+\item El número de hilos por bloque (128, 256 o 512) casi no cambia el tiempo. Lo que sí importa
+      es calentar la GPU: tras una pausa, la primera llamada puede ser hasta 19 veces más lenta
+      porque la GPU está en su estado de bajo consumo. Los 2\,s de calentamiento bastaron para
+      medir siempre a frecuencia máxima.
+\end{itemize}
+
+\section{Contribuciones}
+
+El trabajo se dividió en tres bloques, cada uno en su rama del repositorio y con interfaces fijas
+entre módulos.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{3cm}p{11.2cm}}
+\toprule
+Integrante & Aporte \\
+\midrule
+Michael Lata & Entorno y dependencias, lectura y escritura de imágenes, máscaras, convolución
+secuencial en Python, comando principal, prueba de viabilidad, datos del equipo y ejecución de
+las mediciones en su portátil. \\
+Jordy Romero & Kernel para PyCUDA, clase \texttt{ConvolucionPyCUDA} (contexto, compilación,
+memoria, transferencias, lanzamiento y eventos), ancho de banda, herramienta de volcado de C/C++
+y CUDA C, cálculo de errores y tolerancia, y pruebas (manual, de límites y de equivalencia). \\
+Andres Morocho & Protocolo de medición y los cuatro experimentos, CSV, script de corrida
+completa, gráficas y tablas, evidencia visual, informe y presentación. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Reproducibilidad}
+
+El código está en \repo. Las mediciones de este informe se tomaron con el commit
+\texttt{a4061fb}, que la corrida registra en \texttt{resultados/equipo.txt}. Los commits
+siguientes solo agregan los resultados, el informe y la tabla y la figura del estado de la GPU
+por configuración (\texttt{scripts/graficas.py}). No cambian el código medido. La versión
+entregada es el commit \texttt{\pendiente{hash}}, etiquetado \texttt{entrega}. La práctica 01 está en \texttt{practica01/} y
+proviene del commit \texttt{b2b8014} de \repoAnterior. Para repetir todo en un equipo con GPU
+NVIDIA:
+
+\begin{lstlisting}[language=bash]
+git clone https://github.com/Whiteherobot/convolucion-pycuda && cd convolucion-pycuda
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+scripts/correr_todo.sh            # pruebas, P01, P02, tablas y gráficas
+\end{lstlisting}
+
+El script genera las imágenes si faltan, guarda los datos del equipo, ejecuta las pruebas
+(\texttt{pytest}), mide C/C++ y CUDA C con el programa de la práctica 01, mide Python y PyCUDA y
+genera las tablas y gráficas. Los resultados quedan en \texttt{resultados/}: mediciones
+(\texttt{mediciones.csv}, \texttt{p01\_mediciones.csv}), validación, estado de la GPU, resumen,
+aceleraciones, tablas en \texttt{tablas/}, gráficas en \texttt{graficas/} y el registro completo
+de la ejecución (\texttt{registro\_corrida.txt}).
+
+\section*{Firmas}
+\addcontentsline{toc}{section}{Firmas}
+\vspace{2cm}
+\noindent
+\begin{tabular}{ccc}
+\rule{4.3cm}{0.4pt} & \rule{4.3cm}{0.4pt} & \rule{4.3cm}{0.4pt} \\
+Michael Lata & Jordy Romero & Andres Morocho \\
+\end{tabular}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%     FIN   TEXTO     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{biblist}
+
+\end{document}

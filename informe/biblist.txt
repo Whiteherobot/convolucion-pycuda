@@ -1,0 +1,38 @@
+% Subir a Overleaf como biblist.bib
+
+@book{sanders2010,
+  author    = {Sanders, Jason and Kandrot, Edward},
+  title     = {CUDA by Example: An Introduction to General-Purpose GPU Programming},
+  publisher = {Addison-Wesley},
+  year      = {2010}
+}
+
+@manual{cudaguide,
+  title        = {CUDA C++ Programming Guide},
+  organization = {NVIDIA Corporation},
+  note         = {\url{https://docs.nvidia.com/cuda/cuda-c-programming-guide/}}
+}
+
+@book{gonzalez2018,
+  author    = {Gonzalez, Rafael C. and Woods, Richard E.},
+  title     = {Digital Image Processing},
+  edition   = {4},
+  publisher = {Pearson},
+  year      = {2018}
+}
+
+@article{klockner2012,
+  author  = {Kl{\"o}ckner, Andreas and Pinto, Nicolas and Lee, Yunsup and Catanzaro, Bryan and Ivanov, Paul and Fasih, Ahmed},
+  title   = {{PyCUDA} and {PyOpenCL}: A scripting-based approach to {GPU} run-time code generation},
+  journal = {Parallel Computing},
+  volume  = {38},
+  number  = {3},
+  pages   = {157--174},
+  year    = {2012}
+}
+
+@manual{pycudadoc,
+  title        = {PyCUDA Documentation: Tutorial and Device Interface},
+  author       = {Kl{\"o}ckner, Andreas},
+  note         = {\url{https://documen.tician.de/pycuda/}}
+}
