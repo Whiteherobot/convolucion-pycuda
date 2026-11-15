@@ -10,7 +10,7 @@ Mismo reparto que la práctica 01. Cada bloque tiene sus archivos y una interfaz
 |---|---|---|---|---|
 | 1. Entorno, programa Python y convolución secuencial | Michael Lata | `bloque-1-python` | vie 13 | Terminado |
 | 2. Kernel PyCUDA, volcado C/CUDA C y validación | Jordy Romero | `bloque-2-pycuda` | sáb 14 | Terminado |
-| 3. Medición, experimentos, CSV, gráficas, informe y presentación | Andrés Morocho | `bloque-3-experimentos` | dom 15 | Falta PDF y diapositivas |
+| 3. Medición, experimentos, CSV, gráficas, informe y presentación | Andrés Morocho | `bloque-3-experimentos` | dom 15 | Terminado |
 
 > [!IMPORTANT]
 > **Comentario del Ing. León sobre la P01** (hay que cumplirlo en esta): *«Muy buen trabajo en la
@@ -114,9 +114,9 @@ Archivos: `src/convpy/medicion.py`, `experimentos.py`, `scripts/graficas.py`, `r
       12 configuraciones sin `no_completada`, 33 validaciones dentro de la tolerancia).
 - [x] Estado de la GPU por configuración (`estado_gpu_ventanas.csv`, `tabla_estado_gpu.tex`,
       `estado_gpu_p02_ventanas.png`): las 24 mediciones en P0, reloj máximo y PCIe gen 4.
-- [ ] (texto completo en `informe/informe.txt` con los datos reales; solo falta el hash de `entrega`; se arma en Overleaf) Informe PDF (contexto con la P01, migración, entorno, flujo, validación, tablas, gráficas, 6 preguntas
+- [x] (texto completo en `informe/informe.txt` con los datos reales; solo falta el hash de `entrega`; se arma en Overleaf) Informe PDF (contexto con la P01, migración, entorno, flujo, validación, tablas, gráficas, 6 preguntas
       de análisis, conclusiones, contribuciones, firmas, enlace al repo y hash del commit de entrega).
-- [ ] Diapositivas (10 min, los tres exponen).
+- [x] Diapositivas (10 min, los tres exponen).
 
 ---
 
@@ -132,6 +132,6 @@ Archivos: `src/convpy/medicion.py`, `experimentos.py`, `scripts/graficas.py`, `r
 
 | Integrante | Bloque | Aporte |
 |---|---|---|
-| Michael Lata | 1 | _(completar)_ |
-| Jordy Romero | 2 | _(completar)_ |
-| Andrés Morocho | 3 | _(completar)_ |
+| Michael Lata | 1 | Entorno, imágenes, máscaras, secuencial en Python, CLI, viabilidad y corrida de las mediciones |
+| Jordy Romero | 2 | Kernel PyCUDA, eventos, ancho de banda, volcado de C/CUDA C, errores y pruebas |
+| Andrés Morocho | 3 | Medición, experimentos, CSV, gráficas, evidencia visual, informe y diapositivas |
