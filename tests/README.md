@@ -1,4 +1,4 @@
-# Pruebas (Bloque 2 - Jordi Romero)
+# Pruebas (Bloque 2 - Jordy Romero)
 
 - `test_manual.py`: matriz 5x5 de la figura 1 → 78 y 87 en Python secuencial y PyCUDA
   (C y CUDA C ya lo hacen con `practica01 ... probar`).

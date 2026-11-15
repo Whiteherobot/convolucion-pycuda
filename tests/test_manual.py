@@ -1,4 +1,4 @@
-"""Matriz 5x5 de la figura 1 con valores calculados a mano. Bloque 2 - Jordi Romero."""
+"""Matriz 5x5 de la figura 1 con valores calculados a mano. Bloque 2 - Jordy Romero."""
 import pytest
 
 from convpy.secuencial import convolucion_secuencial

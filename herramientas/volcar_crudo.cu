@@ -1,4 +1,4 @@
-// Vuelca la salida float SIN recortar de C/C++ y CUDA C. Bloque 2 - Jordi Romero
+// Vuelca la salida float SIN recortar de C/C++ y CUDA C. Bloque 2 - Jordy Romero
 //   volcar_crudo <entrada.pgm> <filtro> <k> <prefijo>   ->   <prefijo>_cpu.f32 y <prefijo>_gpu.f32
 // Usa los fuentes de practica01/src/modelo tal cual, para comparar las cuatro versiones.
 #include <cstdio>

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Compila volcar_crudo con los fuentes de la práctica 01. Bloque 2 - Jordi Romero
+# Compila volcar_crudo con los fuentes de la práctica 01. Bloque 2 - Jordy Romero
 # Uso: herramientas/compilar.sh   ->   build/volcar_crudo
 set -e
 raiz=$(cd "$(dirname "$0")/.." && pwd)

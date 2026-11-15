@@ -1,7 +1,7 @@
 # Plan de trabajo por bloques
 
 Práctica 02 · Computación Paralela — Convolución de imágenes de alta resolución mediante PyCUDA.
-Cierre: **lunes 16 de noviembre de 2026, 14:00**. Equipo: Michael Lata, Jordi Romero y Andrés Morocho.
+Cierre: **lunes 16 de noviembre de 2026, 14:00**. Equipo: Michael Lata, Jordy Romero y Andrés Morocho.
 
 Mismo reparto que la práctica 01. Cada bloque tiene sus archivos y una interfaz fija
 (las firmas de `src/convpy/`). Mientras se respeten, cada uno trabaja en su rama sin pisar a los demás.
@@ -9,7 +9,7 @@ Mismo reparto que la práctica 01. Cada bloque tiene sus archivos y una interfaz
 | Bloque | Responsable | Rama | Para cuándo | Estado |
 |---|---|---|---|---|
 | 1. Entorno, programa Python y convolución secuencial | Michael Lata | `bloque-1-python` | vie 13 | Terminado |
-| 2. Kernel PyCUDA, volcado C/CUDA C y validación | Jordi Romero | `bloque-2-pycuda` | sáb 14 | Terminado |
+| 2. Kernel PyCUDA, volcado C/CUDA C y validación | Jordy Romero | `bloque-2-pycuda` | sáb 14 | Terminado |
 | 3. Medición, experimentos, CSV, gráficas, informe y presentación | Andrés Morocho | `bloque-3-experimentos` | dom 15 | Falta PDF y diapositivas |
 
 > [!IMPORTANT]
@@ -57,9 +57,9 @@ Archivos: `src/convpy/imagen.py`, `mascaras.py`, `secuencial.py`, `__main__.py`,
   C, CUDA C y PyCUDA acumulan en `float` (32 bits). La diferencia es del orden de 1e-5, dentro de
   la tolerancia; explicarlo en el informe (pregunta 2).
 
-**Entrega a los demás:** `imagen.py`, `mascaras.py` y `secuencial.py` funcionando (Jordi y Andrés los importan).
+**Entrega a los demás:** `imagen.py`, `mascaras.py` y `secuencial.py` funcionando (Jordy y Andrés los importan).
 
-## Bloque 2 — PyCUDA y validación (Jordi Romero)
+## Bloque 2 — PyCUDA y validación (Jordy Romero)
 
 Archivos: `src/convpy/kernels/convolucion.cu`, `src/convpy/pycuda_conv.py`, `src/convpy/validacion.py`,
 `herramientas/` y `tests/`.
@@ -133,5 +133,5 @@ Archivos: `src/convpy/medicion.py`, `experimentos.py`, `scripts/graficas.py`, `r
 | Integrante | Bloque | Aporte |
 |---|---|---|
 | Michael Lata | 1 | _(completar)_ |
-| Jordi Romero | 2 | _(completar)_ |
+| Jordy Romero | 2 | _(completar)_ |
 | Andrés Morocho | 3 | _(completar)_ |

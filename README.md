@@ -7,7 +7,7 @@ commit `b2b8014`, copiada en `practica01/`). El programa anfitrión pasa a Pytho
 convolución secuencial en Python y el kernel CUDA de la práctica 01 se ejecuta con PyCUDA. Se comparan
 cuatro versiones: C/C++ secuencial, CUDA C, Python secuencial y PyCUDA.
 
-**Integrantes:** Michael Lata, Jordi Romero y Andrés Morocho.
+**Integrantes:** Michael Lata, Jordy Romero y Andrés Morocho.
 
 > En construcción. El reparto de tareas está en [PLAN.md](PLAN.md).
 

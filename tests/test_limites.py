@@ -1,4 +1,4 @@
-"""Imagen 1001x777, no múltiplo de 128/256/512 hilos: bordes y cobertura total. Bloque 2 - Jordi Romero."""
+"""Imagen 1001x777, no múltiplo de 128/256/512 hilos: bordes y cobertura total. Bloque 2 - Jordy Romero."""
 import numpy as np
 import pytest
 

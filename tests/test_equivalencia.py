@@ -1,4 +1,4 @@
-"""Las cuatro versiones contra C/C++ secuencial, sin recortar. Bloque 2 - Jordi Romero.
+"""Las cuatro versiones contra C/C++ secuencial, sin recortar. Bloque 2 - Jordy Romero.
 
 El volcado de C y CUDA C sale de herramientas/volcar_crudo (se compila con nvcc).
 """

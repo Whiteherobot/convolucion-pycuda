@@ -29,7 +29,7 @@
 
 
 \title{Convolución de imágenes de alta resolución mediante PyCUDA}
-\author{Michael Lata \\ Jordy Romero \\ Andres Morocho}
+\author{Michael Lata \\ Jordy Romero \\ Andrés Morocho}
 \date{\today}
 
 \makeatletter
@@ -836,7 +836,7 @@ las mediciones en su portátil. \\
 Jordy Romero & Kernel para PyCUDA, clase \texttt{ConvolucionPyCUDA} (contexto, compilación,
 memoria, transferencias, lanzamiento y eventos), ancho de banda, herramienta de volcado de C/C++
 y CUDA C, cálculo de errores y tolerancia, y pruebas (manual, de límites y de equivalencia). \\
-Andres Morocho & Protocolo de medición y los cuatro experimentos, CSV, script de corrida
+Andrés Morocho & Protocolo de medición y los cuatro experimentos, CSV, script de corrida
 completa, gráficas y tablas, evidencia visual, informe y presentación. \\
 \bottomrule
 \end{tabular}
@@ -871,7 +871,7 @@ de la ejecución (\texttt{registro\_corrida.txt}).
 \noindent
 \begin{tabular}{ccc}
 \rule{4.3cm}{0.4pt} & \rule{4.3cm}{0.4pt} & \rule{4.3cm}{0.4pt} \\
-Michael Lata & Jordy Romero & Andres Morocho \\
+Michael Lata & Jordy Romero & Andrés Morocho \\
 \end{tabular}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

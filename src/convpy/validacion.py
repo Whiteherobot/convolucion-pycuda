@@ -1,4 +1,4 @@
-"""Comparación numérica entre versiones. Bloque 2 - Jordi Romero.
+"""Comparación numérica entre versiones. Bloque 2 - Jordy Romero.
 
 Referencia: C/C++ secuencial de la práctica 01. Errores ANTES del recorte a 0-255.
 """
