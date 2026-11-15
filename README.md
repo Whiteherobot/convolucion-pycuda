@@ -9,7 +9,7 @@ cuatro versiones: C/C++ secuencial, CUDA C, Python secuencial y PyCUDA.
 
 **Integrantes:** Michael Lata, Jordy Romero y Andrés Morocho.
 
-> En construcción. El reparto de tareas está en [PLAN.md](PLAN.md).
+El reparto de tareas está en [PLAN.md](PLAN.md).
 
 ## Requisitos
 
@@ -37,6 +37,27 @@ python3 scripts/viabilidad.py
 # Pruebas
 pytest -v
 ```
+
+### Demostración en clase (~5 min)
+
+Con el entorno activado y `export PYTHONPATH=src`, en este orden:
+
+```bash
+# 1. Validación: figura 1 (78 y 87), límites 1001x777 y las cuatro versiones equivalentes
+python3 -m convpy probar
+
+# 2. Python secuencial, hecho a mano (sin NumPy en el cálculo): ~3 s en 2000x2000
+python3 -m convpy filtrar datos/imagen_2000.pgm resultados/sec.pgm media 3 secuencial
+
+# 3. Mismo filtro con PyCUDA: kernel <1 ms, desglose CPU->GPU / kernel / GPU->CPU
+python3 -m convpy filtrar datos/imagen_2000.pgm resultados/gpu.pgm media 3 pycuda 256
+
+# 4. Las dos salidas son idénticas
+cmp resultados/sec.pgm resultados/gpu.pgm && echo iguales
+```
+
+Después se muestran las gráficas ya medidas en `resultados/graficas/` (tiempos, aceleraciones,
+ancho de banda efectivo frente al pico y estado de la GPU).
 
 ### Mediciones (equipo con GPU NVIDIA)
 
