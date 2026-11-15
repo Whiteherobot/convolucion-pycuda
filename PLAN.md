@@ -9,8 +9,8 @@ Mismo reparto que la práctica 01. Cada bloque tiene sus archivos y una interfaz
 | Bloque | Responsable | Rama | Para cuándo | Estado |
 |---|---|---|---|---|
 | 1. Entorno, programa Python y convolución secuencial | Michael Lata | `bloque-1-python` | vie 13 | Terminado |
-| 2. Kernel PyCUDA, volcado C/CUDA C y validación | Jordi Romero | `bloque-2-pycuda` | sáb 14 | Pendiente |
-| 3. Medición, experimentos, CSV, gráficas, informe y presentación | Andrés Morocho | `bloque-3-experimentos` | dom 15 | Pendiente |
+| 2. Kernel PyCUDA, volcado C/CUDA C y validación | Jordi Romero | `bloque-2-pycuda` | sáb 14 | Terminado |
+| 3. Medición, experimentos, CSV, gráficas, informe y presentación | Andrés Morocho | `bloque-3-experimentos` | dom 15 | Falta PDF y diapositivas |
 
 > [!IMPORTANT]
 > **Comentario del Ing. León sobre la P01** (hay que cumplirlo en esta): *«Muy buen trabajo en la
