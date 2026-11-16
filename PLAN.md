@@ -1,6 +1,6 @@
 # Plan de trabajo por bloques
 
-> Nota (después de la entrega): `src/convpy/` se ordenó por secciones (`imagenes/`, `filtros/`, `convolucion/`, `evaluacion/`). Las rutas de abajo son las originales; el mapa actual está en el README.
+> Nota (después de la entrega): `src/convpy/` se agrupó en tres carpetas sin cambiar los archivos: `entrada/` (imagen, mascaras), `convolucion/` (secuencial, pycuda_conv, kernels) y `evaluacion/` (validacion, medicion, experimentos). Las rutas de abajo son las originales.
 
 Práctica 02 · Computación Paralela — Convolución de imágenes de alta resolución mediante PyCUDA.
 Cierre: **lunes 16 de noviembre de 2026, 14:00**. Equipo: Michael Lata, Jordy Romero y Andrés Morocho.
