@@ -26,7 +26,7 @@ import numpy as np  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
-from convpy import filtros, imagenes  # noqa: E402
+from convpy.entrada import imagen, mascaras  # noqa: E402
 
 ENTRADA = RAIZ / "datos" / "imagen_4000.pgm"
 FILTROS = [("media", 9), ("nitidez", 3), ("laplaciano", 3)]
@@ -51,12 +51,12 @@ def convolucion_numpy(img: np.ndarray, m: np.ndarray) -> np.ndarray:
 
 def filtrar(img: np.ndarray):
     try:
-        from convpy.convolucion.pycuda_gpu import ConvolucionPyCUDA
+        from convpy.convolucion.pycuda_conv import ConvolucionPyCUDA
         gpu = ConvolucionPyCUDA()
-        return "PyCUDA", {f: gpu.ejecutar(img, filtros.crear(*f))[0] for f in FILTROS}
+        return "PyCUDA", {f: gpu.ejecutar(img, mascaras.crear(*f))[0] for f in FILTROS}
     except Exception as motivo:  # sin GPU o sin PyCUDA
         print(f"  PyCUDA no disponible ({type(motivo).__name__}): se usa NumPy solo para la figura")
-        return "NumPy (sin GPU)", {f: convolucion_numpy(img, filtros.crear(*f)) for f in FILTROS}
+        return "NumPy (sin GPU)", {f: convolucion_numpy(img, mascaras.crear(*f)) for f in FILTROS}
 
 
 def main() -> int:
@@ -65,7 +65,7 @@ def main() -> int:
     if not ENTRADA.exists():
         print(f"Falta {ENTRADA}: generar con practica01/scripts/preparar_imagenes.py")
         return 1
-    img = imagenes.cargar_gris(str(ENTRADA))
+    img = imagen.cargar_gris(str(ENTRADA))
     print(f"Evidencia visual con {ENTRADA.name} ({img.shape[1]}x{img.shape[0]})")
     origen, salidas = filtrar(img)
 
@@ -76,7 +76,7 @@ def main() -> int:
         (f"{f.capitalize()} {k}×{k}", s) for (f, k), s in salidas.items()]
     fig, axs = plt.subplots(2, 4, figsize=(12, 6.8), constrained_layout=True)
     for col, (titulo, datos) in enumerate(paneles):
-        visible = imagenes.a_rango_visual(datos)
+        visible = imagen.a_rango_visual(datos)
         axs[0, col].imshow(visible, cmap="gray", vmin=0, vmax=255)
         axs[0, col].add_patch(plt.Rectangle((x0, y0), LADO_RECORTE, LADO_RECORTE, fill=False,
                                             edgecolor="yellow", linewidth=1))

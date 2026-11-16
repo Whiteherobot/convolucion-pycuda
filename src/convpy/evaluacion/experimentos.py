@@ -36,7 +36,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .. import filtros, imagenes
+from ..entrada import imagen, mascaras
 from .medicion import (CALENTAMIENTO_GPU_S, REPETICIONES, Configuracion, EscritorCSV,
                        MonitorGPU, Resultado, hora, medir_pycuda, medir_secuencial)
 from .validacion import TOLERANCIA, errores
@@ -116,7 +116,7 @@ class Referencia:
             try:
                 subprocess.run([str(HERRAMIENTA), ruta_pgm, filtro, str(k), str(prefijo)],
                                check=True)
-                par = tuple(imagenes.cargar_crudo(f"{prefijo}_{v}.f32", ancho, alto)
+                par = tuple(imagen.cargar_crudo(f"{prefijo}_{v}.f32", ancho, alto)
                             for v in ("cpu", "gpu"))
             except (OSError, ValueError, subprocess.CalledProcessError) as fallo:
                 print(f"      [AVISO] volcar_crudo falló ({fallo}): esta configuración se "
@@ -200,7 +200,7 @@ def main(args: list[str]) -> None:
               f"faltan {len(pendientes)}.")
     print(f"Resultados en: {salida}/")
 
-    from ..convolucion.pycuda_gpu import ConvolucionPyCUDA  # aquí y no arriba: importar PyCUDA exige GPU
+    from ..convolucion.pycuda_conv import ConvolucionPyCUDA  # aquí y no arriba: importar PyCUDA exige GPU
 
     gpu = ConvolucionPyCUDA()
     print(f"PyCUDA listo: contexto {gpu.contexto_ms:.1f} ms, compilación del kernel "
@@ -217,7 +217,7 @@ def main(args: list[str]) -> None:
     estado = "gpu_estado.csv"
     if op.continuar and (salida / estado).exists():
         estado = f"gpu_estado_continuacion_{time.strftime('%H%M%S')}.csv"
-    cargadas: dict[int, np.ndarray] = {}
+    imagenes: dict[int, np.ndarray] = {}
     fuera_tolerancia, omitidas = 0, []
     inicio_total = time.perf_counter()
     exp_actual = None
@@ -230,13 +230,13 @@ def main(args: list[str]) -> None:
             ruta = f"{op.datos}/imagen_{lado}.pgm"
             print(f"  [{i}/{len(pendientes)}] {filtro} {k}x{k}, {lado}x{lado}, {hilos} hilos  "
                   f"(inicio {hora()}, transcurrido {_minutos(time.perf_counter() - inicio_total)})")
-            if lado not in cargadas:
+            if lado not in imagenes:
                 if not Path(ruta).exists():
                     print(f"      [AVISO] falta {ruta}: se omite esta configuración")
                     omitidas.append(f"exp {numero} {filtro} {k}x{k} {lado}")
                     continue
-                cargadas = {lado: imagenes.cargar_gris(ruta)}  # una a la vez: 6000 = 144 MB
-            c = Configuracion(numero, filtro, k, cargadas[lado], filtros.crear(filtro, k), hilos)
+                imagenes = {lado: imagen.cargar_gris(ruta)}  # una a la vez: 6000 = 144 MB
+            c = Configuracion(numero, filtro, k, imagenes[lado], mascaras.crear(filtro, k), hilos)
             salidas = {}
 
             if con_python:

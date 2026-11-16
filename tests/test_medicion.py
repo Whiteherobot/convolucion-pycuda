@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import numpy as np
 import pytest
 
-from convpy import imagenes
+from convpy.entrada import imagen
 from convpy.evaluacion.medicion import COLUMNAS_CSV
 from convpy.convolucion.secuencial import convolucion_secuencial
 
@@ -43,9 +43,9 @@ def corrida(tmp_path_factory):
 
 
 def _correr(tmp_path, monkeypatch):
-    falso = types.ModuleType("convpy.convolucion.pycuda_gpu")
+    falso = types.ModuleType("convpy.convolucion.pycuda_conv")
     falso.ConvolucionPyCUDA = GPUSimulada
-    monkeypatch.setitem(sys.modules, "convpy.convolucion.pycuda_gpu", falso)
+    monkeypatch.setitem(sys.modules, "convpy.convolucion.pycuda_conv", falso)
     from convpy.evaluacion import experimentos
     monkeypatch.setattr(experimentos, "HERRAMIENTA", tmp_path / "no_existe")
     monkeypatch.setattr(experimentos.Referencia, "_compilar", staticmethod(lambda: False))
@@ -54,7 +54,7 @@ def _correr(tmp_path, monkeypatch):
     datos.mkdir()
     rng = np.random.default_rng(1)
     for lado in (2000, 4000, 6000):
-        imagenes.guardar_visual(str(datos / f"imagen_{lado}.pgm"),
+        imagen.guardar_visual(str(datos / f"imagen_{lado}.pgm"),
                               rng.integers(0, 256, (24, 24)).astype(np.float32))
     resultados = tmp_path / "resultados"
     experimentos.main(["--datos", str(datos), "--resultados", str(resultados),
@@ -99,8 +99,8 @@ def test_validacion_y_archivos_auxiliares(corrida):
 
 def test_python_no_completada_si_no_cabe_en_el_presupuesto(tmp_path):
     from convpy.evaluacion.medicion import Configuracion, medir_secuencial
-    from convpy import filtros
-    c = Configuracion(2, "media", 3, np.ones((8, 8), np.float32), filtros.crear("media", 3))
+    from convpy.entrada import mascaras
+    c = Configuracion(2, "media", 3, np.ones((8, 8), np.float32), mascaras.media(3))
     r = medir_secuencial(c, presupuesto_s=0.0)
     assert [f["estado"] for f in r.filas] == ["calentamiento", "no_completada"]
     assert "presupuesto" in r.filas[1]["nota"]

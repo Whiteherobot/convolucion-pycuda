@@ -1,6 +1,6 @@
 """Convolución en GPU con PyCUDA. Bloque 2 - Jordy Romero.
 
-Kernel: convolucion/kernels/convolucion.cu, adaptado de practica01/src/modelo/convolucion_gpu.cu
+Kernel: kernels/convolucion.cu, adaptado de practica01/src/modelo/convolucion_gpu.cu
 (un hilo por píxel, bloques e hilos solo en X, lectura de vecinos en memoria global).
 """
 import atexit

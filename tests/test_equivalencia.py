@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 from conftest import imagen_aleatoria
-from convpy import filtros, imagenes
+from convpy.entrada import imagen, mascaras
 from convpy.convolucion.secuencial import convolucion_secuencial
 from convpy.evaluacion.validacion import TOLERANCIA, errores
 
@@ -32,7 +32,7 @@ def herramienta():
 @pytest.fixture(scope="module")
 def entrada_pgm(tmp_path_factory):
     ruta = tmp_path_factory.mktemp("equivalencia") / "entrada.pgm"
-    imagenes.guardar_visual(str(ruta), imagen_aleatoria(ANCHO, ALTO))
+    imagen.guardar_visual(str(ruta), imagen_aleatoria(ANCHO, ALTO))
     return ruta
 
 
@@ -40,11 +40,11 @@ def entrada_pgm(tmp_path_factory):
 def test_cuatro_versiones_coinciden(gpu, herramienta, entrada_pgm, filtro, k):
     prefijo = entrada_pgm.parent / f"{filtro}{k}"
     subprocess.run([str(herramienta), str(entrada_pgm), filtro, str(k), str(prefijo)], check=True)
-    c_cpu = imagenes.cargar_crudo(f"{prefijo}_cpu.f32", ANCHO, ALTO)
-    c_gpu = imagenes.cargar_crudo(f"{prefijo}_gpu.f32", ANCHO, ALTO)
+    c_cpu = imagen.cargar_crudo(f"{prefijo}_cpu.f32", ANCHO, ALTO)
+    c_gpu = imagen.cargar_crudo(f"{prefijo}_gpu.f32", ANCHO, ALTO)
 
-    entrada = imagenes.cargar_gris(str(entrada_pgm))
-    mascara = filtros.crear(filtro, k)
+    entrada = imagen.cargar_gris(str(entrada_pgm))
+    mascara = mascaras.crear(filtro, k)
     python_cpu = convolucion_secuencial(entrada, mascara)
     python_gpu, _ = gpu.ejecutar(entrada, mascara)
 

@@ -1,10 +1,17 @@
-"""SECCIÓN 1 · GUARDADO DE IMÁGENES. Bloque 1 - Michael Lata.
+"""Lectura, conversión y escritura de imágenes. Bloque 1 - Michael Lata.
 
-La convolución devuelve float32 SIN recortar (la nitidez puede pasar de 255 y el laplaciano da
-negativos). El recorte a 0-255 solo se hace al guardar para ver, igual que en la práctica 01.
+Contrato con los demás bloques: toda imagen viaja como ndarray float32, 2D (alto, ancho),
+C-contiguo. El recorte a 0-255 solo se hace al guardar para ver, igual que en la práctica 01.
 """
 import numpy as np
 from PIL import Image
+
+
+def cargar_gris(ruta: str) -> np.ndarray:
+    """Lee la imagen, la pasa a escala de grises ('L') y devuelve float32 (alto, ancho) contiguo."""
+    with Image.open(ruta) as img:
+        gris = img.convert("L")
+        return np.ascontiguousarray(np.asarray(gris, dtype=np.float32))
 
 
 def a_rango_visual(imagen: np.ndarray) -> np.ndarray:
@@ -13,12 +20,8 @@ def a_rango_visual(imagen: np.ndarray) -> np.ndarray:
 
 
 def guardar_visual(ruta: str, imagen: np.ndarray) -> None:
-    """Guarda como uint8 (PGM o PNG según la extensión).
-
-    compress_level=1: PNG comprime menos pero guarda ~5 veces más rápido; los píxeles son los mismos.
-    """
-    opciones = {"compress_level": 1} if str(ruta).lower().endswith(".png") else {}
-    Image.fromarray(a_rango_visual(imagen), mode="L").save(ruta, **opciones)
+    """Guarda como uint8 (PGM o PNG según la extensión)."""
+    Image.fromarray(a_rango_visual(imagen), mode="L").save(ruta)
 
 
 def guardar_crudo(ruta: str, imagen: np.ndarray) -> None:
