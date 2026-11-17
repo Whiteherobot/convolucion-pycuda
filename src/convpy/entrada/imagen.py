@@ -24,6 +24,16 @@ def guardar_visual(ruta: str, imagen: np.ndarray) -> None:
     Image.fromarray(a_rango_visual(imagen), mode="L").save(ruta)
 
 
+def guardar_comparacion(ruta: str, original: np.ndarray, resultado: np.ndarray,
+                        ancho_max: int = 2400) -> None:
+    """PNG con la original a la izquierda y la filtrada a la derecha, reducido para verlo."""
+    lado = np.hstack([a_rango_visual(original), a_rango_visual(resultado)])
+    vista = Image.fromarray(lado, mode="L")
+    if vista.width > ancho_max:
+        vista = vista.resize((ancho_max, round(vista.height * ancho_max / vista.width)))
+    vista.save(ruta)
+
+
 def guardar_crudo(ruta: str, imagen: np.ndarray) -> None:
     """Guarda el float32 sin recortar (.npy) para la comparación numérica."""
     np.save(ruta, np.ascontiguousarray(imagen, dtype=np.float32))

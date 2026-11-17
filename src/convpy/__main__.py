@@ -4,13 +4,17 @@
   python -m convpy probar
   python -m convpy medir                (bloque 3)
 
-`filtrar` guarda la imagen visible en <salida> y el float sin recortar en <salida>.npy.
+`filtrar` guarda la imagen visible en <salida>, el float sin recortar en <salida>.npy
+y una vista <salida>_vista.png (original | filtrada) que abre con el visor del sistema.
+Agregar --sin-ver al final para no abrirla.
 
 Orden del paquete (el mismo de la exposición):
   entrada/      1. imagen.py (cargar, guardar) · mascaras.py (los tres filtros)
   convolucion/  2. secuencial.py (Python) · pycuda_conv.py + kernels/convolucion.cu (GPU)
   evaluacion/   3. validacion.py · medicion.py · experimentos.py
 """
+import os
+import subprocess
 import sys
 import time
 
@@ -23,6 +27,8 @@ USO = __doc__
 
 
 def filtrar(args: list[str]) -> None:
+    ver = "--sin-ver" not in args
+    args = [a for a in args if a != "--sin-ver"]
     entrada, salida, filtro, k, version = args[:5]
     hilos = int(args[5]) if len(args) > 5 else 256
     img = imagen.cargar_gris(entrada)
@@ -47,6 +53,13 @@ def filtrar(args: list[str]) -> None:
     imagen.guardar_visual(salida, resultado)
     imagen.guardar_crudo(salida + ".npy", resultado)
     print(f"guardado {salida}")
+
+    vista = os.path.splitext(salida)[0] + "_vista.png"
+    imagen.guardar_comparacion(vista, img, resultado)
+    print(f"vista {vista}")
+    if ver:
+        subprocess.Popen(["xdg-open", vista], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
 
 
 def main() -> None:
